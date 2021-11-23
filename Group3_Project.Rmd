@@ -1,0 +1,27 @@
+---
+title: "Housing Prices Analysis"
+author: "Mandey Brown, Megan Dunnahoo, Emma Hamilton"
+output: html_document
+---
+
+```{r setup, results='hide', warning=FALSE, message=FALSE}
+library(knitr)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+```
+
+```{r}
+#reproducibility
+set.seed(445)
+```
+
+```{r}
+
+test <- read.csv("/cloud/project/test.csv")
+train <- read.csv("/cloud/project/train.csv")
+
+
+```
+
