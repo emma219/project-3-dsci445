@@ -11,6 +11,7 @@ library(tidyverse)
 library(ggplot2)
 library(GGally)
 library(tree)
+library(ISLR)
 
 ```
 
@@ -69,9 +70,58 @@ ggpairs(df_cond)
 ```
 
 Missing Values
-```{r}
+
+```{r, warning=FALSE, message=FALSE}
 #deal with NA/missing values
+
+#get sum of missing values per column
 cbind(lapply(lapply(train, is.na), sum))
+
+#get percentage missing values per column
+mv <- train %>% summarize_all(funs(sum(is.na(.)) / length(.)))
+
+#find which columns have a missing percentage higher then 45%
+#and remove them
+which(mv > 0.45)
+train <- train[-c(7, 58, 73:75)]
+
+#replace the remaining values with mean/mode appropriately
+train$LotFrontage[is.na(train$LotFrontage)] <- round(mean(train$LotFrontage, na.rm = TRUE))
+train$GarageYrBlt[is.na(train$GarageYrBlt)] <- round(mean(train$GarageYrBlt, na.rm = TRUE))
+#train$train$GarageYrBlt <- as.integer(train$GarageYrBlt)
+
+calc_mode <- function(x){
+  # List the distinct / unique values
+  distinct_values <- unique(x)
+  
+  # Count the occurrence of each distinct value
+  distinct_tabulate <- tabulate(match(x, distinct_values))
+  
+  # Return the value with the highest occurrence
+  distinct_values[which.max(distinct_tabulate)]
+}
+
+train <- train %>% 
+  mutate(across(everything(), ~replace_na(.x, calc_mode(.x))))
+
+```
+
+Convert Types
+
+```{r}
+sapply(train, class)
+#convert integer type to numeric
+#convert character to factor
+
+
+```
+
+
+Decision Tree
+
+```{r}
+#tree.SP <- tree(SalePrice ~., data = train)
+
 
 ```
 
