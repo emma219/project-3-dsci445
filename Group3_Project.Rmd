@@ -10,6 +10,7 @@ library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(GGally)
+library(tree)
 
 ```
 
@@ -64,6 +65,13 @@ ggpairs(df_qual)
 df_cond <- train %>% select(c(OverallCond, ExterCond, BsmtCond, GarageCond, SalePrice))
 
 ggpairs(df_cond)
+
+```
+
+Missing Values
+```{r}
+#deal with NA/missing values
+cbind(lapply(lapply(train, is.na), sum))
 
 ```
 
