@@ -9,6 +9,7 @@ library(knitr)
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(GGally)
 
 ```
 
@@ -22,6 +23,47 @@ set.seed(445)
 test <- read.csv("/cloud/project/test.csv")
 train <- read.csv("/cloud/project/train.csv")
 
+```
+
+Exploratory Data Analysis
+
+```{r explore}
+# See how time variables effect sale price
+ggplot(train, aes(x=YrSold, y=SalePrice)) +
+  geom_point() +
+  stat_summary(fun = "mean", geom = "point", color="red") +
+  stat_summary(fun = "median", geom = "point", color="blue") +
+  ggtitle("Year Sold vs Sale Price") + xlab("Year Sold")
+ggplot(train, aes(x=MoSold, y=SalePrice)) +
+  geom_point() +
+  stat_summary(fun = "mean", geom = "point", color="red") +
+  stat_summary(fun = "median", geom = "point", color="blue") +
+  ggtitle("Month Sold vs Sale Price") + xlab("Month Sold")
+ggplot(train, aes(x=YearBuilt, y=SalePrice)) +
+  geom_point() +
+  stat_summary(fun = "mean", geom = "point", color="red") +
+  stat_summary(fun = "median", geom = "point", color="blue") +
+  ggtitle("Year Built vs Sale Price") + xlab("Year Built")
+ggplot(train, aes(x=YearRemodAdd, y=SalePrice)) +
+  geom_point() +
+  stat_summary(fun = "mean", geom = "point", color="red") +
+  stat_summary(fun = "median", geom = "point", color="blue") +
+  ggtitle("Year Remodeled vs Sale Price") + xlab("Year Remodeled")
+
+# Size indicator variables
+df_size <- train %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath, TotRmsAbvGrd, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, GarageArea, SalePrice))
+
+ggpairs(df_size)
+
+# Condition/quality variables
+df_qual <- train %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, FireplaceQu, GarageQual, PoolQC, Fence, SalePrice))
+
+ggpairs(df_qual)
+
+# Condition variables
+df_cond <- train %>% select(c(OverallCond, ExterCond, BsmtCond, GarageCond, SalePrice))
+
+ggpairs(df_cond)
 
 ```
 
