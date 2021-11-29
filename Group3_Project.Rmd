@@ -109,10 +109,11 @@ train <- train %>%
 Convert Types
 
 ```{r}
-sapply(train, class)
+#sapply(train, class)
 #convert integer type to numeric
 #convert character to factor
-
+train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
+sapply(train, class)
 
 ```
 
@@ -120,8 +121,8 @@ sapply(train, class)
 Decision Tree
 
 ```{r}
-#tree.SP <- tree(SalePrice ~., data = train)
-
+tree.SP <- tree(SalePrice ~., data = train)
+tree.SP
 
 ```
 
