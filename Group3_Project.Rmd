@@ -14,6 +14,8 @@ library(ggplot2)
 library(GGally)
 library(tree)
 library(ISLR)
+library(glmnet)
+library(rpart)
 
 ```
 
@@ -26,7 +28,7 @@ set.seed(445)
 	Housing prices play a central role in the U.S. economy. According to a *Congressional Research Service* article, *Introduction to U.S. Economy: Housing Market*, “at the individual level, roughly 65% of occupied housing units are owner occupied, homes are a substantial source of household wealth in the United States… housing accounts for a significant portion of all economic activity, and changes in the housing market can have broader effects on the economy.” The housing market is also incorporated into gross domestic product (GDP), which is considered the primary measure of economic activity for a country. Also, according to the article, *Introduction to U.S. Economy: Housing Market*, “as of 2020, spending on housing services was about $2.8 trillion, accounting for 13.3% of GDP. Taken together, spending within the housing market accounted for 17.5% of GDP in 2020.” The housing market not only affects the U.S. economy and GDP, up and coming college graduates will also soon be on the lookout for a place to live and knowing exactly what affects housing prices could prove to be incredibly useful.  
 
 # Methodology 
-	Housing prices influence the economy, but what influences house prices? Kaggle competition, *House Prices – Advanced Regression Techniques* provides a dataset of housing prices compiled by Dean De Cock in 2011, which describes the sale of individual residential property in Ames, Iowa from 2006 to 2010. The dataset includes 79 explanatory variables (23 nominal, 23 ordinal, 14 discrete, and 20 continuous) all involved in evaluating home values. In order to find out which aspects of a home matter most when it comes to the final price of a home, the 79 available variables will be explored using Random Forest, LASSO, and Ridge Regression models
+	Housing prices influence the economy, but what influences house prices? Kaggle competition, *House Prices – Advanced Regression Techniques* provides a dataset of housing prices compiled by Dean De Cock in 2011, which describes the sale of individual residential property in Ames, Iowa from 2006 to 2010. The dataset includes 79 explanatory variables (23 nominal, 23 ordinal, 14 discrete, and 20 continuous) all involved in evaluating home values. In order to find out which aspects of a home matter most when it comes to the final price of a home, the 79 available variables will be explored using a Decision Tree, Random Forest, PCR, Linear Regression, LASSO, and Ridge Regression models
  
 
 ```{r}
@@ -129,13 +131,28 @@ sapply(train, class)
 
 Decision Tree
 
-```{r}
+```{r, collapse=TRUE}
+# Create SalePrice tree
 tree.SP <- tree(SalePrice ~., data = train)
+
+# Variables that get used:
+print ("**** Below are variables used in the tree ****")
+summary(tree.SP)$used
+
+# Variables that are omitted in the tree
+cat("\n")
+print ("**** Below are omitted variables ****")
+names(train)[which(!(names(train) %in%summary(tree.SP)$used))]
 
 ```
 
 
+LASSO
 
+```{r}
+
+
+```
 
 
 
