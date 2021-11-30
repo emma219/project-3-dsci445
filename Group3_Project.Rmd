@@ -13,10 +13,11 @@ library(tidyverse)
 library(ggplot2)
 library(GGally)
 library(tree)
-library(ISLR)
 library(glmnet)
 library(rpart)
 library(gbm)
+library(randomForest)
+library(pls)
 
 ```
 
@@ -32,10 +33,61 @@ set.seed(445)
 	Housing prices influence the economy, but what influences house prices? Kaggle competition, *House Prices – Advanced Regression Techniques* provides a dataset of housing prices compiled by Dean De Cock in 2011, which describes the sale of individual residential property in Ames, Iowa from 2006 to 2010. The dataset includes 79 explanatory variables (23 nominal, 23 ordinal, 14 discrete, and 20 continuous) all involved in evaluating home values. In order to find out which aspects of a home matter most when it comes to the final price of a home, the 79 available variables will be explored using a Decision Tree, Random Forest, PCR, Linear Regression, LASSO, and Ridge Regression models
  
 
-```{r}
-
-test <- read.csv("/cloud/project/test.csv")
+```{r data}
+#test <- read.csv("/cloud/project/test.csv")
 train <- read.csv("/cloud/project/train.csv")
+```
+
+Convert Types
+
+```{r conv}
+#sapply(train, class)
+#convert integer type to numeric
+#convert character to factor
+train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
+#sapply(train, class)
+train$MSSubClass <- as.factor(train$MSSubClass)
+train$OverallQual <- as.factor(train$OverallQual)
+train$OverallCond <- as.factor(train$OverallCond)
+#sapply(train, class)
+
+```
+
+Missing Values
+
+```{r nas, warning=FALSE, message=FALSE}
+#deal with NA/missing values
+
+#get sum of missing values per column
+cbind(lapply(lapply(train, is.na), sum))
+
+#get percentage missing values per column
+mv <- train %>% summarize_all(funs(sum(is.na(.)) / length(.)))
+
+#find which columns have a missing percentage higher then 45%
+#and remove them
+which(mv > 0.45)
+train <- train[-c(7, 58, 73:75)]
+
+#replace the remaining values with mean/mode appropriately
+train$LotFrontage[is.na(train$LotFrontage)] <- round(mean(train$LotFrontage, na.rm = TRUE))
+train$LotFrontage <- as.integer(train$LotFrontage)
+train$GarageYrBlt[is.na(train$GarageYrBlt)] <- round(mean(train$GarageYrBlt, na.rm = TRUE))
+train$GarageYrBlt <- as.integer(train$GarageYrBlt)
+
+calc_mode <- function(x){
+  # List the distinct / unique values
+  distinct_values <- unique(x)
+
+  # Count the occurrence of each distinct value
+  distinct_tabulate <- tabulate(match(x, distinct_values))
+
+  # Return the value with the highest occurrence
+  distinct_values[which.max(distinct_tabulate)]
+}
+
+train <- train %>%
+  mutate(across(everything(), ~replace_na(.x, calc_mode(.x))))
 
 ```
 
@@ -70,7 +122,7 @@ df_size <- train %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath
 ggpairs(df_size)
 
 # Condition/quality variables
-df_qual <- train %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, FireplaceQu, GarageQual, PoolQC, Fence, SalePrice))
+df_qual <- train %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, GarageQual, SalePrice))
 
 ggpairs(df_qual)
 
@@ -81,63 +133,22 @@ ggpairs(df_cond)
 
 ```
 
-Missing Values
+Provide test set that contains Sale Price
 
-```{r nas, warning=FALSE, message=FALSE}
-#deal with NA/missing values
-
-#get sum of missing values per column
-cbind(lapply(lapply(train, is.na), sum))
-
-#get percentage missing values per column
-mv <- train %>% summarize_all(funs(sum(is.na(.)) / length(.)))
-
-#find which columns have a missing percentage higher then 45%
-#and remove them
-which(mv > 0.45)
-train <- train[-c(7, 58, 73:75)]
-
-#replace the remaining values with mean/mode appropriately
-train$LotFrontage[is.na(train$LotFrontage)] <- round(mean(train$LotFrontage, na.rm = TRUE))
-train$GarageYrBlt[is.na(train$GarageYrBlt)] <- round(mean(train$GarageYrBlt, na.rm = TRUE))
-#train$train$GarageYrBlt <- as.integer(train$GarageYrBlt)
-
-calc_mode <- function(x){
-  # List the distinct / unique values
-  distinct_values <- unique(x)
-  
-  # Count the occurrence of each distinct value
-  distinct_tabulate <- tabulate(match(x, distinct_values))
-  
-  # Return the value with the highest occurrence
-  distinct_values[which.max(distinct_tabulate)]
-}
-
-train <- train %>% 
-  mutate(across(everything(), ~replace_na(.x, calc_mode(.x))))
-
-
-
+```{r testSet}
+# Split training set into new test and train sets so test set has SalePrice
+n <- nrow(train)
+train_split <- seq_len(n) %in% sample(seq_len(n), round(0.7 * n))
+train2 <- data.frame(train[train_split,])
+test2 <- data.frame(train[-train_split,])
 
 ```
-
-Convert Types
-
-```{r conv}
-#sapply(train, class)
-#convert integer type to numeric
-#convert character to factor
-train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
-sapply(train, class)
-
-```
-
 
 Decision Tree
 
 ```{r tree, collapse=TRUE}
 # Create SalePrice tree
-tree.SP <- tree(SalePrice ~., data = train)
+tree.SP <- tree(SalePrice ~., data = train2)
 
 # Variables that get used:
 print ("**** Below are variables used in the tree ****")
@@ -146,15 +157,23 @@ summary(tree.SP)$used
 # Variables that are omitted in the tree
 cat("\n")
 print ("**** Below are omitted variables ****")
-names(train)[which(!(names(train) %in%summary(tree.SP)$used))]
+names(train2)[which(!(names(train2) %in%summary(tree.SP)$used))]
+
+plot(tree.SP)
+text(tree.SP, pretty=0)
 
 ```
 
 
-LASSO
+Random Forest
 
-```{r lasso}
+```{r randomForest}
+rf <- randomForest(SalePrice ~., train, mtry=floor(sqrt(ncol(train)-1)), importance=TRUE)
 
+varImpPlot(rf, sort = TRUE, 
+           n.var = 10, main = "Variables with most Predictive Power")
+
+mean((predict(rf, test2) - test2$SalePrice)^2)
 
 ```
 
@@ -176,14 +195,6 @@ plot(lambs, tr_err, type="b", xlab="Lambda", "ylab"="Training MSE")
 boost_fit <- gbm(SalePrice ~ ., data = train, distribution = "gaussian", n.trees = 1000, shrinkage = lambs[which.min(tr_err)])
 summary(boost_fit)
 
-
-# Split training set into new test and train sets so test set has SalePrice
-n <- nrow(train)
-train_split <- seq_len(n) %in% sample(seq_len(n), round(0.7*n))
-test_split <- !train_split
-train2 <- train[train_split,]
-test2 <- train[test_split,]
-
 lambs <- seq(0.01, 3.01, by=0.1)
 length_lamb <- length(lambs)
 tr_err <- rep(NA, length_lamb)
@@ -201,6 +212,19 @@ boost_fit <- gbm(SalePrice ~ ., data = train2, distribution = "gaussian", n.tree
 summary(boost_fit)
 
 
+```
+
+
+PCR
+
+```{r pcr}
+# PCR_model <- pcr(SalePrice ~ ., data = train2, scale = TRUE, validation = "CV")
+# #produces error:
+# #Error in La.svd(X) : infinite or missing values in 'x'
+# 
+# pcr_pred <- predict(PCR_model, test2)
+# pcr_MSE <- mean((test2$SalePrice - pcr_pred)^2)
+# pcr_MSE
 ```
 
 
