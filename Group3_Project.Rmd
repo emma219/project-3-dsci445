@@ -91,6 +91,10 @@ train1 <- train
 #get sum of missing values per column
 cbind(lapply(lapply(train1, is.na), sum))
 
+train1$MSSubClass <- as.character(train1$MSSubClass)
+train1$OverallQual <- as.character(train1$OverallQual)
+train1$OverallCond <- as.character(train1$OverallCond)
+
 #change the NA level in the categorical variables to NONE
 train1 %>%
  mutate_if(is.character, ~ fct_explicit_na(., na_level = "None"))
@@ -101,13 +105,8 @@ train1[is.na(train)] = 0
 #cbind(lapply(lapply(train1, is.na), sum))
 
 train1 <- as.data.frame(unclass(train1), stringsAsFactors = TRUE)
-#sapply(train, class)
-train1$MSSubClass <- as.factor(train1$MSSubClass)
-train1$OverallQual <- as.factor(train1$OverallQual)
-train1$OverallCond <- as.factor(train1$OverallCond)
 sapply(train1, class)
-
-#cbind(lapply(lapply(train1, is.na), sum))
+cbind(lapply(lapply(train1, is.na), sum))
 
 ```
 
@@ -256,18 +255,26 @@ summary(boost_fit)
 ```
 
 
-PCR
+LASSO
 
-```{r pcr}
-#PCR_model <- pcr(SalePrice ~ ., data = train2, scale = TRUE, validation = "CV")
-# #produces error:
-# #Error in La.svd(X) : infinite or missing values in 'x'
-# 
-# pcr_pred <- predict(PCR_model, test2)
-# pcr_MSE <- mean((test2$SalePrice - pcr_pred)^2)
-# pcr_MSE
+```{r lasso}
+trnmat <- model.matrix(SalePrice ~ . , data = train2)[, -1]
+tstmat <- model.matrix(SalePrice ~ . , data = test2)[, -1]
 
-#http://www.science.smith.edu/~jcrouser/SDS293/labs/lab11-r.html
+lambda = 10 ^ seq(-2, 10, length.out = 100)
+
+lasso <- glmnet(trnmat, train2$SalePrice, alpha = 1, folds = 10, lambda = lambda)
+cv_lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha = 1, folds = 10, lambda = lambda)
+bestLambda <- cv_lasso$lambda.min
+bestLambda
+
+lasso.pred <- predict(lasso, newx = tstmat, s = bestLambda)
+mean((test2$SalePrice - lasso.pred)^2)
+
+cv_lasso$nzero[which.min(cv_lasso$cvm)]
+
+predict(lasso, s=bestLambda, type="coefficients")
+
 ```
 
 
