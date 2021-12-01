@@ -38,25 +38,12 @@ set.seed(445)
 train <- read.csv("/cloud/project/train.csv")
 ```
 
-Convert Types
-
-```{r conv}
-#sapply(train, class)
-#convert integer type to numeric
-#convert character to factor
-train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
-#sapply(train, class)
-train$MSSubClass <- as.factor(train$MSSubClass)
-train$OverallQual <- as.factor(train$OverallQual)
-train$OverallCond <- as.factor(train$OverallCond)
-#sapply(train, class)
-
-```
-
 Missing Values
 
 ```{r nas, warning=FALSE, message=FALSE}
 #deal with NA/missing values
+#Approach 1)
+  #convert NA to mode/mean
 
 #get sum of missing values per column
 cbind(lapply(lapply(train, is.na), sum))
@@ -67,6 +54,7 @@ mv <- train %>% summarize_all(funs(sum(is.na(.)) / length(.)))
 #find which columns have a missing percentage higher then 45%
 #and remove them
 which(mv > 0.45)
+#remove:  Alley, FireplaceQu, PoolQC, Fence, and MiscFeature
 train <- train[-c(7, 58, 73:75)]
 
 #replace the remaining values with mean/mode appropriately
@@ -88,6 +76,53 @@ calc_mode <- function(x){
 
 train <- train %>%
   mutate(across(everything(), ~replace_na(.x, calc_mode(.x))))
+
+```
+
+```{r nas, warning=FALSE, message=FALSE}
+#deal with NA/missing values
+#Approach 2)
+  #convert NA to another level name for categorical 
+  # or 0 for nominal 
+  # dont remove any columns
+
+train1 <- train
+
+#get sum of missing values per column
+cbind(lapply(lapply(train1, is.na), sum))
+
+#change the NA level in the categorical variables to NONE
+train1 %>%
+ mutate_if(is.character, ~ fct_explicit_na(., na_level = "None"))
+
+#change the NA level in the continuous variables to 0
+train1[is.na(train)] = 0
+
+#cbind(lapply(lapply(train1, is.na), sum))
+
+train1 <- as.data.frame(unclass(train1), stringsAsFactors = TRUE)
+#sapply(train, class)
+train1$MSSubClass <- as.factor(train1$MSSubClass)
+train1$OverallQual <- as.factor(train1$OverallQual)
+train1$OverallCond <- as.factor(train1$OverallCond)
+sapply(train1, class)
+
+#cbind(lapply(lapply(train1, is.na), sum))
+
+```
+
+Convert Types
+
+```{r conv}
+#sapply(train, class)
+#convert integer type to numeric
+#convert character to factor
+train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
+#sapply(train, class)
+train$MSSubClass <- as.factor(train$MSSubClass)
+train$OverallQual <- as.factor(train$OverallQual)
+train$OverallCond <- as.factor(train$OverallCond)
+#sapply(train, class)
 
 ```
 
@@ -137,10 +172,10 @@ Provide test set that contains Sale Price
 
 ```{r testSet}
 # Split training set into new test and train sets so test set has SalePrice
-n <- nrow(train)
+n <- nrow(train1)
 train_split <- seq_len(n) %in% sample(seq_len(n), round(0.7 * n))
-train2 <- data.frame(train[train_split,])
-test2 <- data.frame(train[-train_split,])
+train2 <- data.frame(train1[train_split,])
+test2 <- data.frame(train1[-train_split,])
 
 ```
 
@@ -168,7 +203,7 @@ text(tree.SP, pretty=0)
 Random Forest
 
 ```{r randomForest}
-rf <- randomForest(SalePrice ~., train, mtry=floor(sqrt(ncol(train)-1)), importance=TRUE)
+rf <- randomForest(SalePrice ~., train2, mtry=floor(sqrt(ncol(train2)-1)), importance=TRUE)
 
 varImpPlot(rf, sort = TRUE, 
            n.var = 10, main = "Variables with most Predictive Power")
@@ -231,6 +266,8 @@ PCR
 # pcr_pred <- predict(PCR_model, test2)
 # pcr_MSE <- mean((test2$SalePrice - pcr_pred)^2)
 # pcr_MSE
+
+#http://www.science.smith.edu/~jcrouser/SDS293/labs/lab11-r.html
 ```
 
 
