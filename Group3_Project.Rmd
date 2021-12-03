@@ -223,23 +223,6 @@ test_err <- rep(NA, length_lamb)
 for(i in 1:length_lamb) {
  boost_hit <- gbm(SalePrice ~ ., data = train2, distribution = "gaussian", n.trees = 1000, shrinkage = lambs[i], verbose=F)
  tr_pred <- predict(boost_hit, train2, n.trees = 1000)
- tr_err[i] <- mean((tr_pred - train2$SalePrice)^2)
-}
-
-plot(lambs, tr_err, type="b", xlab="Lambda", ylab="Training MSE")
-
-boost_fit <- gbm(SalePrice ~ ., data = train2, distribution = "gaussian", n.trees = 1000, shrinkage = lambs[which.min(tr_err)])
-summary(boost_fit)
-
-#lambs <- seq(0.01, 3.01, by=0.1)
-lambs <- seq(0.001, 0.05, length.out = 50)
-length_lamb <- length(lambs)
-tr_err <- rep(NA, length_lamb)
-test_err <- rep(NA, length_lamb)
-
-for(i in 1:length_lamb) {
- boost_hit <- gbm(SalePrice ~ ., data = train2, distribution = "gaussian", n.trees = 1000, shrinkage = lambs[i], verbose=F)
- tr_pred <- predict(boost_hit, train2, n.trees = 1000)
  test_pred <- predict(boost_hit, test2, n.trees = 1000)
  tr_err[i] <- mean((tr_pred - train2$SalePrice)^2)
  test_err[i] <- mean((test_pred - test2$SalePrice)^2)
@@ -250,7 +233,6 @@ plot(lambs, test_err, type="b", xlab="Lambda", "ylab"="Test MSE")
 boost_fit <- gbm(SalePrice ~ ., data = train2, distribution = "gaussian", n.trees = 1000, shrinkage = lambs[which.min(test_err)])
 
 summary(boost_fit)
-
 
 ```
 
