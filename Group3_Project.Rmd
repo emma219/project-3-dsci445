@@ -9,6 +9,7 @@ library(knitr)
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(naniar)
 library(GGally)
 library(tree)
 library(glmnet)
@@ -32,136 +33,89 @@ set.seed(445)
  
 
 ```{r data}
-#test <- read.csv("/cloud/project/test.csv")
+test <- read.csv("/cloud/project/test.csv")
 train <- read.csv("/cloud/project/train.csv")
 ```
 
 Missing Values
 
 ```{r nas, warning=FALSE, message=FALSE}
-#deal with NA/missing values
-#Approach 1)
-  #convert NA to mode/mean
-
-#get sum of missing values per column
-cbind(lapply(lapply(train, is.na), sum))
-
-#get percentage missing values per column
-mv <- train %>% summarize_all(funs(sum(is.na(.)) / length(.)))
-
-#find which columns have a missing percentage higher then 45%
-#and remove them
-which(mv > 0.45)
-#remove:  Alley, FireplaceQu, PoolQC, Fence, and MiscFeature
-train <- train[-c(7, 58, 73:75)]
-
-#replace the remaining values with mean/mode appropriately
-train$LotFrontage[is.na(train$LotFrontage)] <- round(mean(train$LotFrontage, na.rm = TRUE))
-train$LotFrontage <- as.integer(train$LotFrontage)
-train$GarageYrBlt[is.na(train$GarageYrBlt)] <- round(mean(train$GarageYrBlt, na.rm = TRUE))
-train$GarageYrBlt <- as.integer(train$GarageYrBlt)
-
-calc_mode <- function(x){
-  # List the distinct / unique values
-  distinct_values <- unique(x)
-
-  # Count the occurrence of each distinct value
-  distinct_tabulate <- tabulate(match(x, distinct_values))
-
-  # Return the value with the highest occurrence
-  distinct_values[which.max(distinct_tabulate)]
-}
-
-train <- train %>%
-  mutate(across(everything(), ~replace_na(.x, calc_mode(.x))))
-
-```
-
-```{r nas2, warning=FALSE, message=FALSE}
-#deal with NA/missing values
-#Approach 2)
+#handle NA/missing values
+#Approach:
   #convert NA to another level name for categorical 
   # or 0 for nominal 
   # dont remove any columns
 
-train1 <- train
+#visualize number of NA per variable
+gg_miss_var(train) + labs(y = "Number NA")
 
-#get sum of missing values per column
-cbind(lapply(lapply(train1, is.na), sum))
-
-train1$MSSubClass <- as.character(train1$MSSubClass)
-train1$OverallQual <- as.character(train1$OverallQual)
-train1$OverallCond <- as.character(train1$OverallCond)
+#convert these levels to characters (later be converted to levels)
+#not continuous variables
+train$MSSubClass <- as.character(train$MSSubClass)
+train$OverallQual <- as.character(train$OverallQual)
+train$OverallCond <- as.character(train$OverallCond)
 
 #change the NA level in the categorical variables to NONE
-train1 %>%
+train1 <- train %>%
  mutate_if(is.character, ~ fct_explicit_na(., na_level = "None"))
 
 #change the NA level in the continuous variables to 0
-train1[is.na(train)] = 0
-
-#cbind(lapply(lapply(train1, is.na), sum))
+train1[is.na(train1)] = 0
 
 train1 <- as.data.frame(unclass(train1), stringsAsFactors = TRUE)
-sapply(train1, class)
-cbind(lapply(lapply(train1, is.na), sum))
-
-```
-
-Convert Types
-
-```{r conv}
 #sapply(train, class)
-#convert integer type to numeric
-#convert character to factor
-train <- as.data.frame(unclass(train), stringsAsFactors = TRUE)
-#sapply(train, class)
-train$MSSubClass <- as.factor(train$MSSubClass)
-train$OverallQual <- as.factor(train$OverallQual)
-train$OverallCond <- as.factor(train$OverallCond)
-#sapply(train, class)
+#cbind(lapply(lapply(train1, is.na), sum))
 
 ```
 
 Exploratory Data Analysis
 
-```{r explore}
+```{r explore, warning=FALSE, message=FALSE}
 # See how time variables effect sale price
-ggplot(train, aes(x=YrSold, y=SalePrice)) +
+ggplot(train1, aes(x=YrSold, y=SalePrice)) +
   geom_point() +
   stat_summary(fun = "mean", geom = "point", color="red") +
   stat_summary(fun = "median", geom = "point", color="blue") +
   ggtitle("Year Sold vs Sale Price") + xlab("Year Sold")
-ggplot(train, aes(x=MoSold, y=SalePrice)) +
+
+ggplot(train1, aes(x=MoSold, y=SalePrice)) +
   geom_point() +
   stat_summary(fun = "mean", geom = "point", color="red") +
   stat_summary(fun = "median", geom = "point", color="blue") +
   ggtitle("Month Sold vs Sale Price") + xlab("Month Sold")
-ggplot(train, aes(x=YearBuilt, y=SalePrice)) +
+
+ggplot(train1, aes(x=YearBuilt, y=SalePrice)) +
   geom_point() +
   stat_summary(fun = "mean", geom = "point", color="red") +
   stat_summary(fun = "median", geom = "point", color="blue") +
   ggtitle("Year Built vs Sale Price") + xlab("Year Built")
-ggplot(train, aes(x=YearRemodAdd, y=SalePrice)) +
+
+ggplot(train1, aes(x=YearRemodAdd, y=SalePrice)) +
   geom_point() +
   stat_summary(fun = "mean", geom = "point", color="red") +
   stat_summary(fun = "median", geom = "point", color="blue") +
   ggtitle("Year Remodeled vs Sale Price") + xlab("Year Remodeled")
 
 # Size indicator variables
-df_size <- train %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath, TotRmsAbvGrd, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, GarageArea, SalePrice))
+df_size <- train1 %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath, TotRmsAbvGrd, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, GarageArea, SalePrice))
 
 ggpairs(df_size)
 
 # Condition/quality variables
-df_qual <- train %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, GarageQual, SalePrice))
+df_qual <- train1 %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, GarageQual, SalePrice))
 
 ggpairs(df_qual)
 
 # Condition variables
-df_cond <- train %>% select(c(OverallCond, ExterCond, BsmtCond, GarageCond, SalePrice))
+df_cond <- train1 %>% select(c(OverallCond, ExterCond, BsmtCond, GarageCond, SalePrice))
 
 ggpairs(df_cond)
+
+```
+
+Log Transform the Data
+
+```{r}
 
 ```
 
@@ -235,7 +189,7 @@ summary(boost_fit)
 ```
 
 
-LASSO
+LASSO or SVM?
 
 ```{r lasso}
 trnmat <- model.matrix(SalePrice ~ . , data = train2)[, -1]
