@@ -99,17 +99,14 @@ ggplot(train1, aes(x=YearRemodAdd, y=SalePrice)) +
 
 # Size indicator variables
 df_size <- train1 %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath, TotRmsAbvGrd, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, GarageArea, SalePrice))
-
 ggpairs(df_size)
 
 # Condition/quality variables
 df_qual <- train1 %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, GarageQual, SalePrice))
-
 ggpairs(df_qual)
 
 # Condition variables
 df_cond <- train1 %>% select(c(OverallCond, ExterCond, BsmtCond, GarageCond, SalePrice))
-
 ggpairs(df_cond)
 
 ```
@@ -162,6 +159,13 @@ names(train2)[which(!(names(train2) %in%summary(tree.SP)$used))]
 plot(tree.SP)
 text(tree.SP, pretty=0)
 
+# pred <- predict(tree.SP, test2, type='class')
+# confMat <- table(pred, test2$SalePrice)
+# confMat
+
+dt_MSE <- mean((predict(tree.SP, test2) - test2$SalePrice)^2)
+dt_MSE
+
 ```
 
 
@@ -173,7 +177,8 @@ rf <- randomForest(SalePrice ~., train2, mtry=floor(sqrt(ncol(train2)-1)), impor
 varImpPlot(rf, sort = TRUE, 
            n.var = 10, main = "Variables with most Predictive Power")
 
-mean((predict(rf, test2) - test2$SalePrice)^2)
+rf_MSE <- mean((predict(rf, test2) - test2$SalePrice)^2)
+rf_MSE
 
 ```
 
@@ -200,29 +205,46 @@ boost_fit <- gbm(SalePrice ~ ., data = train2, distribution = "gaussian", n.tree
 
 summary(boost_fit)
 
+boost_MSE <- min(test_err)
+boost_MSE
+
 ```
 
 
 LASSO
 
 ```{r lasso}
-trnmat <- model.matrix(SalePrice ~ . , data = train2)[, -1]
-tstmat <- model.matrix(SalePrice ~ . , data = test2)[, -1]
+trnmat<-model.matrix(SalePrice ~ ., data = train2)
+tstmat<-model.matrix(SalePrice ~ ., data = test2)
 
 lambda = 10 ^ seq(-2, 10, length.out = 100)
 
-lasso <- glmnet(trnmat, train2$SalePrice, alpha = 1, folds = 10, lambda = lambda)
-cv_lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha = 1, folds = 10, lambda = lambda)
+lasso.mod <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda)
 
-bestLambda <- cv_lasso$lambda.min
-bestLambda
+cv.lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda, folds = 10)
 
-lasso.pred <- predict(lasso, newx = tstmat, s = bestLambda)
-mean((test2$SalePrice - lasso.pred)^2)
+bestlam.lasso <- cv.lasso$lambda.min
+best.lasso <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=bestlam.lasso)
 
-cv_lasso$nzero[which.min(cv_lasso$cvm)]
+pred.lasso <- predict(lasso.mod, s=bestlam.lasso, newx=tstmat)
 
-predict(lasso, s=bestLambda, type="coefficients")
+lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
+lasso_MSE
+
+```
+
+Table MSE values
+
+```{r}
+MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Boosted Forest", "LASSO"), 
+                        MSE = c(dt_MSE, rf_MSE, boost_MSE, lasso_MSE))
+
+kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
+```
+
+
+Predict Sale Price using Random Forest
+```{r}
 
 ```
 
