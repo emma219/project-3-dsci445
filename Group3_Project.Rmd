@@ -7,6 +7,7 @@ output: beamer_presentation
 ```{r setup, results='hide', warning=FALSE, message=FALSE}
 library(knitr)
 library(dplyr)
+library(tidyr)
 library(tidyverse)
 library(ggplot2)
 library(naniar)
@@ -115,7 +116,20 @@ ggpairs(df_cond)
 
 Log Transform the Data
 
-```{r}
+```{r, message=FALSE}
+ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
+
+ggplot(data = train1, aes(sample = SalePrice)) + 
+  stat_qq() +
+  stat_qq_line()
+
+train1$SalePrice <- log(train1$SalePrice)
+
+ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
+
+ggplot(data = train1, aes(sample = SalePrice)) + 
+  stat_qq() +
+  stat_qq_line()
 
 ```
 
@@ -189,7 +203,7 @@ summary(boost_fit)
 ```
 
 
-LASSO or SVM?
+LASSO
 
 ```{r lasso}
 trnmat <- model.matrix(SalePrice ~ . , data = train2)[, -1]
@@ -199,6 +213,7 @@ lambda = 10 ^ seq(-2, 10, length.out = 100)
 
 lasso <- glmnet(trnmat, train2$SalePrice, alpha = 1, folds = 10, lambda = lambda)
 cv_lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha = 1, folds = 10, lambda = lambda)
+
 bestLambda <- cv_lasso$lambda.min
 bestLambda
 
