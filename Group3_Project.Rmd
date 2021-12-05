@@ -101,7 +101,7 @@ ggplot(train1, aes(x=YearRemodAdd, y=SalePrice)) +
 df_size <- train1 %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath, TotRmsAbvGrd, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, GarageArea, SalePrice))
 ggpairs(df_size)
 
-# Condition/quality variables
+# Quality variables
 df_qual <- train1 %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, GarageQual, SalePrice))
 ggpairs(df_qual)
 
@@ -185,7 +185,7 @@ rf_MSE
 
 Boosting
 
-```{r boost}
+```{r boost, warning=FALSE}
 lambs <- seq(0.001, 0.05, length.out = 50)
 length_lamb <- length(lambs)
 tr_err <- rep(NA, length_lamb)
