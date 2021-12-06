@@ -6,6 +6,11 @@ output:
     theme: default
     colortheme: beaver
     fonttheme: structurebold
+<<<<<<< HEAD
+=======
+    incremental: true
+  
+>>>>>>> d0c602ad129b3b2e553b29d163bdee776b77fd99
 ---
 
 ```{r setup, results='hide', warning=FALSE, message=FALSE, include=FALSE}
@@ -30,10 +35,51 @@ set.seed(445)
 
 
 # Motivation
-\small Housing prices play a central role in the U.S. economy. According to a *Congressional Research Service* article, *Introduction to U.S. Economy: Housing Market*, “at the individual level, roughly 65% of occupied housing units are owner occupied, homes are a substantial source of household wealth in the United States… housing accounts for a significant portion of all economic activity, and changes in the housing market can have broader effects on the economy.” The housing market is also incorporated into gross domestic product (GDP), which is considered the primary measure of economic activity for a country. Also, according to the article, *Introduction to U.S. Economy: Housing Market*, “as of 2020, spending on housing services was about $2.8 trillion, accounting for 13.3% of GDP. Taken together, spending within the housing market accounted for 17.5% of GDP in 2020.” The housing market not only affects the U.S. economy and GDP, up and coming college graduates will also soon be on the lookout for a place to live and knowing exactly what affects housing prices could prove to be incredibly useful.  
+\begin{itemize}
+    \item[--] Housing prices affects U.S. economy
+    \begin{itemize}
+        \item[--] 65-percent of houses are owner occupied
+        \item[--] Housing is a profitable investment
+        \item[--] Housing Market accounts for 13.3-percent of GDP
+        \end{itemize}
+\end{itemize}
+\begin{itemize}
+    \item[--] Many professions and industries would benefit
+    \begin{itemize}
+        \item[--] Appraisers
+        \item[--] Tax assessors
+        \item[--] Mortgage lenders
+        \item[--] Insurers
+        \item[--] Home Builders
+        \begin{itemize}
+            \item[--] Worked with co-owner of Deluxe Homes LLC
+            \item[--] Anticipate building costs
+            \item[--] Need for flexible predictions based on specifics of home
+        \end{itemize}
+      \end{itemize}
+\end{itemize}  
 
 # Methodology
-Housing prices influence the economy, but what influences house prices? Kaggle competition, *House Prices – Advanced Regression Techniques* provides a dataset of housing prices compiled by Dean De Cock in 2011, which describes the sale of individual residential property in Ames, Iowa from 2006 to 2010. The dataset includes 79 explanatory variables (23 nominal, 23 ordinal, 14 discrete, and 20 continuous) all involved in evaluating home values. In order to find out which aspects of a home matter most when it comes to the final price of a home, the 79 available variables will be explored using a Decision Tree, Random Forest, PCR, Linear Regression, LASSO, and Ridge Regression models.
+\begin{itemize}
+    \item[--] Kaggle Knowledge Competition 
+    \begin{itemize}
+        \item[--] "House Prices - Advanced Regression Techniques"
+        \item[--] Residental property of Ames, Iowa from 2006 to 2010
+        \item[--] Dataset includes 79 variables
+        \begin{itemize}
+            \item[--] 23 nominal, 23 ordinal, 14 discrete, and 20 continuous
+            \end{itemize}
+        \item[--] Exploratory Analysis
+        \item[--] Preprocessing
+        \item[--] Advanced Regression Techniques
+        \begin{itemize}
+            \item[--] Decision Tree
+            \item[--] Random Forest
+            \item[--] LASSO
+            \item[--] Boosting
+            \end{itemize}
+    \end{itemize}
+\end{itemize}
 
 
 ```{r data, include=FALSE}
@@ -195,8 +241,24 @@ test2 <- data.frame(train1[-train_split,])
 
 ```
 
-# Decision Tree
+# Tree-Based Methods
 
+\begin{itemize}
+    \item[--] Variety of Trees-Based Methods used
+    \begin{itemize}
+        \item[--] Curious which model might perform better
+        \item[--] Allow for good prediction
+        \begin{itemize}
+            \item[--] Goal is to predict Sale Price
+        \end{itemize}
+        \item[--] Allow for ease of interpretation
+        \item[--] Good visualization
+        \item[--] Suggest which variables are most significant
+    \end{itemize}
+\end{itemize}
+
+# Decision Tree
+ 
 ```{r tree, collapse=TRUE, echo=FALSE}
 # Create SalePrice tree
 tree.SP <- tree(SalePrice ~., data = train2)
@@ -273,11 +335,15 @@ boost_MSE <- min(test_err)
 
 ```
 
-# LASSO
+# Lasso
 
-Anything to put here?
+\begin{itemize}
+    \item[--] Many predictor variables (72 total)
+    \item[--] Desire to determine which subset to use
+    \item[--] Allow for ease of interpretation
+\end{itemize}
 
-```{r lasso, echo=FALSE}
+```{r lasso, echo=FALSE, fig.height=4}
 trnmat<-model.matrix(SalePrice ~ ., data = train2)
 tstmat<-model.matrix(SalePrice ~ ., data = test2)
 
@@ -288,18 +354,58 @@ lasso.mod <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda)
 cv.lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda, folds = 10)
 
 bestlam.lasso <- cv.lasso$lambda.min
+#bestlam.lasso
+
 best.lasso <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=bestlam.lasso)
 
 pred.lasso <- predict(lasso.mod, s=bestlam.lasso, newx=tstmat)
 
 lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
 
+par(mfrow=c(1,2))
+plot(lasso.mod, "lambda", label = TRUE)
+plot(cv.lasso)
+
 ```
-# Table of MSE Values
+
+# Table of Test MSE Values
 
 ```{r mse, echo=FALSE}
 MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Boosted Forest", "LASSO"), 
                         MSE = c(dt_MSE, rf_MSE, boost_MSE, lasso_MSE))
 
-kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
+kable((MSE_table), caption = "Test MSE Values for Different Models", digits = 4)
 ```
+
+# Outside Exploration
+
+\begin{itemize}
+    \item[--] Wanted to attempt to use best model to predict sale prices in Northern Colorado
+    \item[--] Worked with co-owner of Deluxe Homes LLC
+    \item[--] Some issues were discovered:
+        \begin{itemize}
+            \item[--] Using models:
+                \begin{itemize}
+                    \item[--] Overall Quality and Neighborhood are significant
+                    \item[--] Quality is subjective
+                    \item[--] Neighborhood is very different from Ames, Iowa
+                \end{itemize}
+            \item[--] Additional aspects not considered:
+                \begin{itemize}
+                    \item[--] Supply and price of building materials can change
+                    \item[--] Soil quality will impact price of foundation
+                \end{itemize}
+        \end{itemize}
+    \item[--] Data snapshot in time
+\end{itemize}
+
+
+# References
+
+Ames, Iowa: Alternative to the Boston Housing Data as an ... http://jse.amstat.org/v19n3/decock.pdf. 
+
+“Convert Character to Factor in R: Vector, Data Frame Columns &amp; Variable.” Statistics Globe, 14 June 2021, https://statisticsglobe.com/convert-character-to-factor-in-r. 
+
+“House Prices - Advanced Regression Techniques.” Kaggle, https://www.kaggle.com/c/house-prices-advanced-regression-techniques.
+
+Sprecher, Stu. “Deluxe Homes LLC Housing Prices.” 1 Dec. 2021. 
