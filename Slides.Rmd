@@ -37,7 +37,7 @@ set.seed(445)
     \begin{itemize}
         \item[--] 65-percent of houses are owner occupied
         \item[--] Housing is a profitable investment
-        \item[--] Housing Market accounts for 13.3% of GDP
+        \item[--] Housing Market accounts for 13.3-percent of GDP
         \end{itemize}
 \end{itemize}
 \begin{itemize}
