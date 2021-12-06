@@ -357,3 +357,14 @@ kable((MSE_table), caption = "Test MSE Values for Different Models", digits = 4)
         \end{itemize}
     \item[--] Data snapshot in time
 \end{itemize}
+
+
+# References
+
+Ames, Iowa: Alternative to the Boston Housing Data as an ... http://jse.amstat.org/v19n3/decock.pdf. 
+
+“Convert Character to Factor in R: Vector, Data Frame Columns &amp; Variable.” Statistics Globe, 14 June 2021, https://statisticsglobe.com/convert-character-to-factor-in-r. 
+
+“House Prices - Advanced Regression Techniques.” Kaggle, https://www.kaggle.com/c/house-prices-advanced-regression-techniques.
+
+Sprecher, Stu. “Deluxe Homes LLC Housing Prices.” 1 Dec. 2021. 
