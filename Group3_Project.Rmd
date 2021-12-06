@@ -18,6 +18,7 @@ library(rpart)
 library(gbm)
 library(randomForest)
 library(pls)
+library(e1071)
 
 ```
 
@@ -32,6 +33,11 @@ set.seed(445)
 
 
 # Methodology 
+	Built off Kaggle competition, *House Prices – Advanced Regression Techniques,* this project utilizes housing prices compiled by Dean De Cock in 2011, which describes the sale of individual residential property in Ames, Iowa from 2006 to 2010. The dataset includes 79 explanatory variables (23 nominal, 23 ordinal, 14 discrete, and 20 continuous) all involved in evaluating home values. In order to build predictive models for housing price, an exploratory analysis was conducted followed by preprocessing. The project focuses on advanced regression models including a Decision Tree, Random Forest, LASSO, and AdaBoost. 
+	A Decision Tree model is first explored as the output is easily interpreted and its graphical representation can be straightforwardly related to the project’s hypothesis. Though the downfalls of Decision Trees are known, such as overfitting. Instead of taking the approach of pre-pruning the Decision Tree using Chi^2 test, which is “an algorithm used to find out the statistical significance between parent and child nodes” (Analytics Vidhya), or post-pruning using error estimation, in order to avoid overfitting and get a better understanding of the significance of the data’s variables, other models were explored, including Random Forest.  
+	A Random Forest model was also fit to the dataset as it is able to handle large datasets containing higher dimensionality, which was thought to be an appropriate choice as the Ames housing dataset contains 79 variables. A Random Forest model was also chosen as it is able to “reduce correlation between trees by injecting more randomness into the tree-growing process” (Greenwell et al). It was also chosen as a means of identifying which of the 79 variables were significant while predicting house price. 
+	As feature selection is a large component of this project, it was thought that a LASSO model would also prove useful. A LASSO model was thought to offer high prediction accuracy for this dataset since the model’s method includes shrinking the regression coefficients (some of them to zero), while also reducing variance and minimizing bias.
+	An AdaBoost model was also chosen. 
 
  
 
@@ -40,7 +46,9 @@ test <- read.csv("/cloud/project/test.csv")
 train <- read.csv("/cloud/project/train.csv")
 ```
 
-Missing Values
+# Missing Values
+
+After importing the testing and training data from the Kaggle repository, an initial analysis of missing values was conducted:
 
 ```{r nas, warning=FALSE, message=FALSE}
 #handle NA/missing values
@@ -71,7 +79,21 @@ train1 <- as.data.frame(unclass(train1), stringsAsFactors = TRUE)
 
 ```
 
-Exploratory Data Analysis
+
+It was found that the data for the following variables contained the most Missing Values:
+
+PoolQC       > 1250 (>85%) Missing Values \
+MiscFeature  > 1250 (>85%) Missing Values \
+Alley        > 1250 (>85%) Missing Values \
+Fence        > 1000 (>68%) Missing Values \
+FireplaceQu  > 500  (>34%) Missing Values \
+LotFrontface > 250  (>17%) Missing Values \
+
+In order to handle the NA/Missing Values, the NA level in the categorical variables were changed to none as these NA values could not be imputed by using the mean, mode, or interpolation of the feature. This was because it was impossible and impractical to impute the value for the quality of a home's pool (PoolQC), when the home did not come with a pool. 
+
+In order to handle the NA/Missing Values of continuous variables, all NA values were converted to zero. This made intuitive sense as as it did not make sense to impute any values other than zero for continuous variables such as MasVnrArea or masonry veneer area in square feet if a home did not contain any masonry veneer area. 
+
+# Exploratory Data Analysis
 
 ```{r explore, warning=FALSE, message=FALSE}
 # See how time variables effect sale price
@@ -251,7 +273,6 @@ MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Boosted For
 kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
 ```
 
-
 Predict Sale Price using Random Forest
 ```{r}
 
@@ -267,4 +288,8 @@ Ames, Iowa: Alternative to the Boston Housing Data as an ... http://jse.amstat.o
 
 “House Prices - Advanced Regression Techniques.” Kaggle, https://www.kaggle.com/c/house-prices-advanced-regression-techniques.
 
-Sprecher, Stu. “Deluxe Homes LLC Housing Prices.” 1 Dec. 2021. 
+Sprecher, Stu. “Deluxe Homes LLC Housing Prices.” 1 Dec. 2021.
+
+Greenwell, Bradley Boehmke & Brandon. “Hands-on Machine Learning with R.” Chapter 11 Random Forests, 1 Feb. 2020, https://bradleyboehmke.github.io/HOML/random-forest.html#fn29. 
+
+“Tree Based Algorithms: Implementation in Python & R.” Analytics Vidhya, 26 Aug. 2021, https://www.analyticsvidhya.com/blog/2016/04/tree-based-algorithms-complete-tutorial-scratch-in-python/. 
