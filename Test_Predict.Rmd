@@ -1,0 +1,110 @@
+---
+title: "Test_Predict"
+author: "Megan Dunnahoo"
+date: "12/6/2021"
+output: pdf_document
+---
+
+```{r setup, results='hide', warning=FALSE, message=FALSE}
+library(knitr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(naniar)
+library(GGally)
+library(tree)
+library(glmnet)
+library(rpart)
+library(gbm)
+library(randomForest)
+library(pls)
+
+```
+
+```{r}
+#reproducibility
+set.seed(445)
+```
+
+```{r data}
+test <- read.csv("/cloud/project/test.csv")
+train <- read.csv("/cloud/project/train.csv")
+```
+
+Missing Values
+
+```{r nas, warning=FALSE, message=FALSE}
+#handle NA/missing values
+#Approach:
+  #convert NA to another level name for categorical 
+  # or 0 for nominal 
+  # dont remove any columns
+
+#visualize number of NA per variable
+gg_miss_var(train) + labs(y = "Number NA")
+
+#convert these levels to characters (later be converted to levels)
+#not continuous variables
+train$MSSubClass <- as.character(train$MSSubClass)
+train$OverallQual <- as.character(train$OverallQual)
+train$OverallCond <- as.character(train$OverallCond)
+
+#change the NA level in the categorical variables to NONE
+train1 <- train %>%
+ mutate_if(is.character, ~ fct_explicit_na(., na_level = "None"))
+
+#change the NA level in the continuous variables to 0
+train1[is.na(train1)] = 0
+
+train1 <- as.data.frame(unclass(train1), stringsAsFactors = TRUE)
+#sapply(train, class)
+#cbind(lapply(lapply(train1, is.na), sum))
+
+```
+
+Log Transform the Data
+
+```{r, message=FALSE}
+ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
+
+ggplot(data = train1, aes(sample = SalePrice)) + 
+  stat_qq() +
+  stat_qq_line()
+
+train1$SalePrice <- log(train1$SalePrice)
+
+ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
+
+ggplot(data = train1, aes(sample = SalePrice)) + 
+  stat_qq() +
+  stat_qq_line()
+
+```
+
+Provide test set that contains Sale Price
+
+```{r testSet}
+# Split training set into new test and train sets so test set has SalePrice
+n <- nrow(train1)
+train_split <- seq_len(n) %in% sample(seq_len(n), round(0.7 * n))
+train2 <- data.frame(train1[train_split,])
+test2 <- data.frame(train1[-train_split,])
+
+```
+
+
+Random Forest
+
+```{r randomForest}
+rf <- randomForest(SalePrice ~., train2, mtry=floor(sqrt(ncol(train2)-1)), importance=TRUE)
+
+varImpPlot(rf, sort = TRUE, 
+           n.var = 10, main = "Variables with most Predictive Power")
+
+rf_MSE <- mean((predict(rf, test2) - test2$SalePrice)^2)
+rf_MSE
+
+predict(rf, test2)
+
+```

@@ -6,7 +6,6 @@ output:
     theme: default
     colortheme: beaver
     fonttheme: structurebold
-  slidy_presentation: default
 ---
 
 ```{r setup, results='hide', warning=FALSE, message=FALSE, include=FALSE}
