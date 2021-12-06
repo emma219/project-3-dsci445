@@ -32,8 +32,6 @@ test <- read.csv("/cloud/project/test.csv")
 train <- read.csv("/cloud/project/train.csv")
 ```
 
-Missing Values
-
 ```{r nas, warning=FALSE, message=FALSE}
 #handle NA/missing values
 #Approach:
