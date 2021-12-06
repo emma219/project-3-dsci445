@@ -6,7 +6,8 @@ output:
     theme: default
     colortheme: beaver
     fonttheme: structurebold
-  slidy_presentation: default
+    incremental: true
+  
 ---
 
 ```{r setup, results='hide', warning=FALSE, message=FALSE, include=FALSE}
@@ -196,8 +197,24 @@ test2 <- data.frame(train1[-train_split,])
 
 ```
 
-# Decision Tree
+# Tree-Based Methods
 
+\begin{itemize}
+    \item[--] Variety of Trees-Based Methods used
+    \begin{itemize}
+        \item[--] Curious which model might perform better
+        \item[--] Allow for good prediction
+        \begin{itemize}
+            \item[--] Goal is to predict Sale Price
+        \end{itemize}
+        \item[--] Allow for ease of interpretation
+        \item[--] Good visualization
+        \item[--] Suggest which variables are most significant
+    \end{itemize}
+\end{itemize}
+
+# Decision Tree
+ 
 ```{r tree, collapse=TRUE, echo=FALSE}
 # Create SalePrice tree
 tree.SP <- tree(SalePrice ~., data = train2)
@@ -274,11 +291,18 @@ boost_MSE <- min(test_err)
 
 ```
 
-# LASSO
+# Lasso
 
-Anything to put here?
+\begin{itemize}
+    \item[--] Many predictor variables
+        \begin{itemize}
+            \item[--] 72 total 
+        \end{itemize}
+    \item[--] Desire to determine which subset to use
+    \item[--] Allow for ease of interpretation
+\end{itemize}
 
-```{r lasso, echo=FALSE}
+```{r lasso, include=FALSE}
 trnmat<-model.matrix(SalePrice ~ ., data = train2)
 tstmat<-model.matrix(SalePrice ~ ., data = test2)
 
@@ -286,9 +310,15 @@ lambda = 10 ^ seq(-2, 10, length.out = 100)
 
 lasso.mod <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda)
 
+#plot(lasso.mod)
+
 cv.lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda, folds = 10)
 
+#plot(cv.lasso)
+
 bestlam.lasso <- cv.lasso$lambda.min
+#bestlam.lasso
+
 best.lasso <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=bestlam.lasso)
 
 pred.lasso <- predict(lasso.mod, s=bestlam.lasso, newx=tstmat)
@@ -296,6 +326,7 @@ pred.lasso <- predict(lasso.mod, s=bestlam.lasso, newx=tstmat)
 lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
 
 ```
+
 # Table of MSE Values
 
 ```{r mse, echo=FALSE}
@@ -304,3 +335,25 @@ MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Boosted For
 
 kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
 ```
+
+# Outside Exploration
+
+\begin{itemize}
+    \item[--] Wanted to attempt to use best model to predict sale prices in Northern Colorado
+    \item[--] Worked with co-owner of Deluxe Homes LLC
+    \item[--] Some issues were discovered:
+        \begin{itemize}
+            \item[--] Using models:
+                \begin{itemize}
+                    \item[--] Overall Quality and Neighborhood are significant
+                    \item[--] Quality is subjective
+                    \item[--] Neighborhood is very different from Ames, Iowa
+                \end{itemize}
+            \item[--] Additional aspects not considered:
+                \begin{itemize}
+                    \item[--] Supply and price of building materials can change
+                    \item[--] Soil quality will impact price of foundation
+                \end{itemize}
+        \end{itemize}
+    \item[--] Data snapshot in time
+\end{itemize}
