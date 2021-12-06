@@ -327,13 +327,13 @@ lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
 
 ```
 
-# Table of MSE Values
+# Table of Test MSE Values
 
 ```{r mse, echo=FALSE}
 MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Boosted Forest", "LASSO"), 
                         MSE = c(dt_MSE, rf_MSE, boost_MSE, lasso_MSE))
 
-kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
+kable((MSE_table), caption = "Test MSE Values for Different Models", digits = 4)
 ```
 
 # Outside Exploration
