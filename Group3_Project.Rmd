@@ -180,6 +180,8 @@ varImpPlot(rf, sort = TRUE,
 rf_MSE <- mean((predict(rf, test2) - test2$SalePrice)^2)
 rf_MSE
 
+predict(rf, test)
+
 ```
 
 
@@ -221,15 +223,20 @@ lambda = 10 ^ seq(-2, 10, length.out = 100)
 
 lasso.mod <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda)
 
+plot(lasso.mod)
+
 cv.lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda, folds = 10)
 
+plot(cv.lasso)
+
 bestlam.lasso <- cv.lasso$lambda.min
+bestlam.lasso
+
 best.lasso <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=bestlam.lasso)
 
 pred.lasso <- predict(lasso.mod, s=bestlam.lasso, newx=tstmat)
 
 lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
-lasso_MSE
 
 ```
 
@@ -252,8 +259,10 @@ Predict Sale Price using Random Forest
 
 # References
 
-“House Prices - Advanced Regression Techniques.” Kaggle, https://www.kaggle.com/c/house-prices-advanced-regression-techniques. 
-
 Ames, Iowa: Alternative to the Boston Housing Data as an ... http://jse.amstat.org/v19n3/decock.pdf. 
 
 “Convert Character to Factor in R: Vector, Data Frame Columns &amp; Variable.” Statistics Globe, 14 June 2021, https://statisticsglobe.com/convert-character-to-factor-in-r. 
+
+“House Prices - Advanced Regression Techniques.” Kaggle, https://www.kaggle.com/c/house-prices-advanced-regression-techniques.
+
+Sprecher, Stu. “Deluxe Homes LLC Housing Prices.” 1 Dec. 2021. 
