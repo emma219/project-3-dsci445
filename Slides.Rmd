@@ -294,15 +294,12 @@ boost_MSE <- min(test_err)
 # Lasso
 
 \begin{itemize}
-    \item[--] Many predictor variables
-        \begin{itemize}
-            \item[--] 72 total 
-        \end{itemize}
+    \item[--] Many predictor variables (72 total)
     \item[--] Desire to determine which subset to use
     \item[--] Allow for ease of interpretation
 \end{itemize}
 
-```{r lasso, include=FALSE}
+```{r lasso, echo=FALSE, fig.height=4}
 trnmat<-model.matrix(SalePrice ~ ., data = train2)
 tstmat<-model.matrix(SalePrice ~ ., data = test2)
 
@@ -310,11 +307,7 @@ lambda = 10 ^ seq(-2, 10, length.out = 100)
 
 lasso.mod <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda)
 
-#plot(lasso.mod)
-
 cv.lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda, folds = 10)
-
-#plot(cv.lasso)
 
 bestlam.lasso <- cv.lasso$lambda.min
 #bestlam.lasso
@@ -324,6 +317,10 @@ best.lasso <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=bestlam.lasso)
 pred.lasso <- predict(lasso.mod, s=bestlam.lasso, newx=tstmat)
 
 lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
+
+par(mfrow=c(1,2))
+plot(lasso.mod, "lambda", label = TRUE)
+plot(cv.lasso)
 
 ```
 
