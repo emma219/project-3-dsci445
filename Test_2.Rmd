@@ -1,5 +1,5 @@
 ---
-title: "Test_Predict"
+title: "Test_2"
 author: "Megan Dunnahoo"
 date: "12/6/2021"
 output: pdf_document
@@ -52,14 +52,19 @@ test$OverallCond <- as.character(test$OverallCond)
 train1 <- train %>%
  mutate_if(is.character, ~ fct_explicit_na(., na_level = "None"))
 
+test1 <- test %>%
+ mutate_if(is.character, ~ fct_explicit_na(., na_level = "None")) 
+
 #change the NA level in the continuous variables to 0
 train1[is.na(train1)] = 0
+
+test1[is.na(test1)] = 0
 
 train1 <- as.data.frame(unclass(train1), stringsAsFactors = TRUE)
 #sapply(train, class)
 #cbind(lapply(lapply(train1, is.na), sum))
 
-test1 <- as.data.frame(unclass(test), stringsAsFactors = TRUE)
+test1 <- as.data.frame(unclass(test1), stringsAsFactors = TRUE)
 
 ```
 
@@ -95,20 +100,6 @@ rf_MSE
 
 test1$fac <- factor(test$fac, levels = levels(train$fac))
 
-predict(rf, test1)
-
-str(train1)
-str(test1)
-str(train)
-str(test)
-
 summary(train2)
-summary(test2)
-summary(test1)
-
-
-ind <- sample(2, nrow(iris), replace = TRUE, prob=c(0.8, 0.2))
-iris.rf <- randomForest(Species ~ ., data=iris[ind == 1,])
-iris.pred <- predict(iris.rf, iris[ind == 2,])
-
+summary(train1)
 ```
