@@ -231,16 +231,14 @@ text(tree.SP, pretty=0)
 # confMat
 
 dt_MSE <- mean((predict(tree.SP, test2) - test2$SalePrice)^2)
-print(paste("Decision Tree Test MSE", dt_MSE))
+print(paste("Decision Tree Test MSE = ", dt_MSE))
 
 ```
 
 
 # Random Forest
-
 	A Random Forest model was also fit as it was believed that it would be able to handle large datasets containing higher dimensionality, which was thought to be an appropriate choice as the Ames housing dataset contains 79 variables. A Random Forest model was also chosen as it is able to “reduce correlation between trees by injecting more randomness into the tree-growing process” (Greenwell et al). It was also chosen as a means of identifying which of the 79 variables were significant while predicting house price. \
-	After fitting the Random Forest model, the variables with the most predicive power were found. The test MSE of the Random Forest model was then calculated. The test MSE of the Random Forest model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price.   
-
+	After fitting the Random Forest model, the variables with the most predictive power were found. The test MSE of the Random Forest model was then calculated. The test MSE of the Random Forest model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \  
 
 ```{r randomForest}
 rf <- randomForest(SalePrice ~., train2, mtry=floor(sqrt(ncol(train2)-1)), importance=TRUE)
@@ -249,7 +247,7 @@ varImpPlot(rf, sort = TRUE,
            n.var = 10, main = "Variables with most Predictive Power")
 
 rf_MSE <- mean((predict(rf, test2) - test2$SalePrice)^2)
-print(paste("Random Forest Test MSE", rf_MSE))
+print(paste("Random Forest Test MSE = ", rf_MSE))
 
 predict(rf, test2)
 
@@ -257,6 +255,9 @@ predict(rf, test2)
 
 # LASSO
 
+	As feature selection was thought to be a large component of the project, a LASSO model was chosen as it offers high prediction accuracy as aids with high dimensionality by shrinking the regression coefficients (some of them to zero).\
+	In order to fit a LASSO model, first the training and testing split data were transformed into matrices and lambda values were added. The coefficients were plotted along with test MSE at different lambta values. The best test MSE of the LASSO model was then calculated. The test MSE of the LASSO model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \ 
+	
 ```{r lasso}
 trnmat<-model.matrix(SalePrice ~ ., data = train2)
 tstmat<-model.matrix(SalePrice ~ ., data = test2)
@@ -272,7 +273,7 @@ cv.lasso <- cv.glmnet(trnmat, train2$SalePrice, alpha=0, lambda=lambda, folds = 
 plot(cv.lasso)
 
 bestlam.lasso <- cv.lasso$lambda.min
-bestlam.lasso
+print(paste("LASSO Test MSE = ", bestlam.lasso))
 
 best.lasso <- glmnet(trnmat, train2$SalePrice, alpha=0, lambda=bestlam.lasso)
 
@@ -310,7 +311,9 @@ boost_MSE
 ```
 
 
-Table MSE values
+# Table of Test MSE Values
+
+In order to compare the test MSE values of the chosen models, a table was created. The table showed the Random Forest model to be the best fit model for predicting Sale Price from the Housing dataset as it showed the lowest MSE of the models chosen. 
 
 ```{r}
 MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Boosted Forest", "LASSO"), 
