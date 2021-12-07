@@ -58,6 +58,7 @@ After importing the testing and training data from the Kaggle repository, an ini
   # dont remove any columns
 
 #visualize number of NA per variable
+train_na <- train[,which(colSums(is.na(train)) > 0)]
 gg_miss_var(train) + labs(y = "Number NA")
 
 #convert these levels to characters (later be converted to levels)
@@ -65,6 +66,18 @@ gg_miss_var(train) + labs(y = "Number NA")
 train$MSSubClass <- as.character(train$MSSubClass)
 train$OverallQual <- as.character(train$OverallQual)
 train$OverallCond <- as.character(train$OverallCond)
+
+#Only 1 NA in Electrial --> replace with Mode
+#Also impractical to not have electricity
+
+#function to calculate the mode
+getmode <- function(n) {
+   uniq <- unique(n)
+   uniq[which.max(tabulate(match(n, uniq)))]
+}
+
+mode_Electrical <- getmode(train$Electrical)
+train$Electrical[is.na(train$Electrical)] <- mode_Electrical
 
 #change the NA level in the categorical variables to NONE
 train1 <- train %>%
@@ -168,8 +181,6 @@ ggplot(data = train1, aes(sample = SalePrice)) +
   stat_qq() +
   stat_qq_line()
 
-
-
 ```
 
 
@@ -249,8 +260,34 @@ varImpPlot(rf, sort = TRUE,
 rf_MSE <- mean((predict(rf, test2) - test2$SalePrice)^2)
 print(paste("Random Forest Test MSE = ", rf_MSE))
 
-predict(rf, test2)
+```
 
+# Bagging
+
+```{r bag}
+# 1. Perform bagging on your training
+bag_fit <- randomForest(SalePrice ~ ., data = train2, mtry = ncol(train2) - 1, importance = TRUE)
+
+# 2. Make a plot of the importance values for each predictor
+# data.frame(bag_fit$importance )%>%
+#   mutate(variable = rownames(bag_fit$importance)) %>%
+#   mutate(variable = factor(variable, levels = variable[order(MeanDecreaseGini)])) %>% ## trick to plot variable by descending Gini
+#   ggplot() +
+#   geom_point(aes(MeanDecreaseGini, variable))
+
+varImpPlot(bag_fit, sort = TRUE, 
+           n.var = 10, main = "Variables with most Predictive Power")
+
+bag_MSE <- mean((predict(bag_fit, test2) - test2$SalePrice)^2)
+bag_MSE
+
+# 3. Estimate the test error rate using your bagged tree model.
+confusion_bag <- table(pred = predict(bag_fit, test2, type = "class"), true = test2$SalePrice)
+
+## test error rate
+(confusion_bag[1, 2] + confusion_bag[2, 1])/sum(confusion_bag)
+
+confusion_bag
 ```
 
 # LASSO
@@ -316,16 +353,104 @@ boost_MSE
 In order to compare the test MSE values of the chosen models, a table was created. The table showed the Random Forest model to be the best fit model for predicting Sale Price from the Housing dataset as it showed the lowest MSE of the models chosen. 
 
 ```{r}
-MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Boosted Forest", "LASSO"), 
-                        MSE = c(dt_MSE, rf_MSE, boost_MSE, lasso_MSE))
+MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Bagged Forest", "Boosted Forest", "LASSO"), 
+                        MSE = c(dt_MSE, rf_MSE, bag_MSE, boost_MSE, lasso_MSE))
 
 kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
 ```
 
 Predict Sale Price using Random Forest
-```{r}
+
+```{r testdata, echo=FALSE, warning=FALSE, message=FALSE}
+#first get test data similar to training data
+#visualize number of NA per variable
+#gg_miss_var(test) + labs(y = "Number NA")
+test_na <- test[,which(colSums(is.na(test)) > 0)]
+gg_miss_var(test_na) + labs(y="Number NA")
+
+#convert these levels to characters (later be converted to levels)
+#not continuous variables
+test$MSSubClass <- as.character(test$MSSubClass)
+test$OverallQual <- as.character(test$OverallQual)
+test$OverallCond <- as.character(test$OverallCond)
+
+#NA/None in the following variables is not practical
+#replace with mode
+#MSZoning
+#Utilities
+#Exterior1st
+#Exterior2nd
+#KitchenQual
+#Functional
+#SaleType
+
+#function to calculate the mode
+getmode <- function(n) {
+   uniq <- unique(n)
+   uniq[which.max(tabulate(match(n, uniq)))]
+}
+
+mode_MSZonzing <- getmode(test$MSZoning)
+test$MSZoning[is.na(test$MSZoning)] <- mode_MSZonzing
+mode_Utilities <- getmode(test$Utilities)
+test$Utilities[is.na(test$Utilities)] <- mode_Utilities
+mode_Exterior1st <- getmode(test$Exterior1st)
+test$Exterior1st[is.na(test$Exterior1st)] <- mode_Exterior1st
+mode_Exterior2nd <- getmode(test$Exterior2nd)
+test$Exterior2nd[is.na(test$Exterior2nd)] <- mode_Exterior2nd
+mode_KitchenQual <- getmode(test$KitchenQual)
+test$KitchenQual[is.na(test$KitchenQual)] <- mode_KitchenQual
+mode_Functional <- getmode(test$Functional)
+test$Functional[is.na(test$Functional)] <- mode_Functional
+mode_SaleType <- getmode(test$SaleType)
+test$SaleType[is.na(test$SaleType)] <- mode_SaleType
+
+#other factor levels convert NA to None
+test1 <- test %>%
+ mutate_if(is.character, ~ fct_explicit_na(., na_level = "None")) 
+
+#any integer levels convert NA to 0
+test1[is.na(test1)] = 0
+
+test1 <- as.data.frame(unclass(test1), stringsAsFactors = TRUE)
+
+#convert all numeric to integer (match training data classes)
+test1$LotFrontage <- as.integer(test1$LotFrontage)
+test1$MasVnrArea <- as.integer(test1$MasVnrArea)
+test1$GarageYrBlt <- as.integer(test1$GarageYrBlt)
+test1$BsmtFinSF1 <- as.integer(test1$BsmtFinSF1)
+test1$BsmtFinSF2  <- as.integer(test1$BsmtFinSF2 )
+test1$BsmtUnfSF <- as.integer(test1$BsmtUnfSF)
+test1$TotalBsmtSF <- as.integer(test1$TotalBsmtSF)
+test1$BsmtFullBath <- as.integer(test1$BsmtFullBath)
+test1$BsmtHalfBath <- as.integer(test1$BsmtHalfBath)
+test1$GarageCars  <- as.integer(test1$GarageCars)
+test1$GarageArea <- as.integer(test1$GarageArea)
+
+#sapply(test1, class)
+#cbind(lapply(lapply(test1, is.na), sum))
 
 ```
+```{r newlevels}
+#Remove rows that contain levels in test that are not in train
+#cant perform any prediction if this is the case
+
+#MSSubClass --> 150
+#only one instance --> remove that row
+
+test1 %>% 
+  group_by(MSSubClass) %>%
+  summarise(no_rows = length(MSSubClass))
+
+test3 <- droplevels(test1[!test1$MSSubClass == "150",])
+
+```
+
+```{r predRF}
+
+```
+
+
 
 
 
