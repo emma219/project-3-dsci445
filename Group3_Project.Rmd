@@ -159,12 +159,24 @@ The second part of the Exploratory Data Analysis was to create multiple scatter 
 
 # Log Transform the Data
 
+The SalePrice variable was log transformed due to having a skewed distribution first discovered in the Exploratory Data Analysis. 
+
 ```{r, message=FALSE}
 ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
 
 ggplot(data = train1, aes(sample = SalePrice)) + 
   stat_qq() +
   stat_qq_line()
+
+
+
+```
+
+
+Further analysis of the SalePrice variable showed a non-normal right-skewed distribution in the above histogram. This non-normal distribution is also evident in the above (Q-Q) plot where the observations curve off of the line indicating the distribution is skewed. 
+
+
+```{r, message=FALSE}
 
 train1$SalePrice <- log(train1$SalePrice)
 
@@ -176,7 +188,11 @@ ggplot(data = train1, aes(sample = SalePrice)) +
 
 ```
 
-Provide test set that contains Sale Price
+
+After log-transforming the SalePrice variable we now see a normal bell-curve shape in the distribution in the above histogram. The above (Q-Q) plot now shows the observations sticking closely to the line without any curvature away from the line. 
+
+
+# Provide test set that contains Sale Price
 
 ```{r testSet}
 # Split training set into new test and train sets so test set has SalePrice
