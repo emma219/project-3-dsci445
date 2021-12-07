@@ -93,7 +93,10 @@ In order to handle the NA/Missing Values, the NA level in the categorical variab
 
 In order to handle the NA/Missing Values of continuous variables, all NA values were converted to zero. This made intuitive sense as as it did not make sense to impute any values other than zero for continuous variables such as MasVnrArea or masonry veneer area in square feet if a home did not contain any masonry veneer area. 
 
+
 # Exploratory Data Analysis
+
+In order to better understand the data and gain insight into the relationship between variables, an explanatory data analysis was performed. 
 
 ```{r explore, warning=FALSE, message=FALSE}
 # See how time variables effect sale price
@@ -124,6 +127,7 @@ ggplot(train1, aes(x=YearRemodAdd, y=SalePrice)) +
 # Size indicator variables
 df_size <- train1 %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath, TotRmsAbvGrd, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, GarageArea, SalePrice))
 ggpairs(df_size)
+ggcorr(df_size, method = c("everything", "pearson"))
 
 # Quality variables
 df_qual <- train1 %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, GarageQual, SalePrice))
@@ -132,10 +136,28 @@ ggpairs(df_qual)
 # Condition variables
 df_cond <- train1 %>% select(c(OverallCond, ExterCond, BsmtCond, GarageCond, SalePrice))
 ggpairs(df_cond)
-
 ```
 
-Log Transform the Data
+The first relationship explored in the Exploratory Data Analysis was the relationship between variables which involve time and SalePrice. These relationships were plotted as:
+
+Sale Price vs. Year Sold \
+Sale Price vs. Month Sold \
+Sale Price vs. Year Built \
+Sale Price vs. Year Remodeled \
+
+The rather flat relationship between Sale Price and Year Sold proved interesting as it was thought that this relationship would show to be predominantly positive. It's been hypothesized that the housing market crash of 2007 might have affected this relationship. 
+
+The relationship between Sale Price and Month Sold was expected, with the exception of sale prices in January. It was expected that homes would sell for more money in the summer months, but it was not expected that January would prove to have the highest sale price of all months.  
+
+The relationship between Sale Price and Year Built was expected with a slightly positive relationship shown. 
+
+The relationship between Sale Price and Year Remodeled also was expected with a slightly positive relationship shown.
+
+
+The second part of the Exploratory Data Analysis was to create multiple scatter plot matrices for indicator variables, quality variables, and condition variables. Here a predominantly positive relationship between Sale Price and the indicator variables was found. However, what stood out most was the skewed distribution of the Sale Price variable across all three scatterplot matrices. Upon further analysis it was discovered that the SalePrice variable should be log transformed.  
+
+
+# Log Transform the Data
 
 ```{r, message=FALSE}
 ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
@@ -286,10 +308,12 @@ Ames, Iowa: Alternative to the Boston Housing Data as an ... http://jse.amstat.o
 
 “Convert Character to Factor in R: Vector, Data Frame Columns &amp; Variable.” Statistics Globe, 14 June 2021, https://statisticsglobe.com/convert-character-to-factor-in-r. 
 
+Greenwell, Bradley Boehmke & Brandon. “Hands-on Machine Learning with R.” Chapter 11 Random Forests, 1 Feb. 2020, https://bradleyboehmke.github.io/HOML/random-forest.html#fn29. 
+
+Holtz, Yan. “Correlation Matrix with GGALLY.” – The R Graph Gallery, https://www.r-graph-gallery.com/199-correlation-matrix-with-ggally.html#:~:text=The%20ggpairs()%20function%20of,is%20displayed%20on%20the%20right. 
+
 “House Prices - Advanced Regression Techniques.” Kaggle, https://www.kaggle.com/c/house-prices-advanced-regression-techniques.
 
 Sprecher, Stu. “Deluxe Homes LLC Housing Prices.” 1 Dec. 2021.
-
-Greenwell, Bradley Boehmke & Brandon. “Hands-on Machine Learning with R.” Chapter 11 Random Forests, 1 Feb. 2020, https://bradleyboehmke.github.io/HOML/random-forest.html#fn29. 
 
 “Tree Based Algorithms: Implementation in Python & R.” Analytics Vidhya, 26 Aug. 2021, https://www.analyticsvidhya.com/blog/2016/04/tree-based-algorithms-complete-tutorial-scratch-in-python/. 
