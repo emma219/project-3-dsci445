@@ -281,13 +281,13 @@ varImpPlot(bag_fit, sort = TRUE,
 bag_MSE <- mean((predict(bag_fit, test2) - test2$SalePrice)^2)
 bag_MSE
 
-# 3. Estimate the test error rate using your bagged tree model.
-confusion_bag <- table(pred = predict(bag_fit, test2, type = "class"), true = test2$SalePrice)
-
-## test error rate
-(confusion_bag[1, 2] + confusion_bag[2, 1])/sum(confusion_bag)
-
-confusion_bag
+# # 3. Estimate the test error rate using your bagged tree model.
+# confusion_bag <- table(pred = predict(bag_fit, test2, type = "class"), true = test2$SalePrice)
+# 
+# ## test error rate
+# (confusion_bag[1, 2] + confusion_bag[2, 1])/sum(confusion_bag)
+# 
+# confusion_bag
 ```
 
 # LASSO
@@ -431,6 +431,7 @@ test1$GarageArea <- as.integer(test1$GarageArea)
 #cbind(lapply(lapply(test1, is.na), sum))
 
 ```
+
 ```{r newlevels}
 #Remove rows that contain levels in test that are not in train
 #cant perform any prediction if this is the case
@@ -447,7 +448,7 @@ test3 <- droplevels(test1[!test1$MSSubClass == "150",])
 ```
 
 ```{r predRF}
-
+#predict(bag_fit, test3)
 ```
 
 
