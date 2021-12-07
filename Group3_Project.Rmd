@@ -194,6 +194,8 @@ After log-transforming the SalePrice variable we now see a normal bell-curve sha
 
 # Provide test set that contains Sale Price
 
+Upon further analysis, it was discovered that an aspect of the Kaggle Competition was that the test dataset did not contain a SalePrice column as this is the condition for ranking the effectiveness of the predictive models submitted. Therefore, the training dataset was split into new test and training sets in order to analyze the data. 
+
 ```{r testSet}
 # Split training set into new test and train sets so test set has SalePrice
 n <- nrow(train1)
