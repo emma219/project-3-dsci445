@@ -264,6 +264,8 @@ print(paste("Random Forest Test MSE = ", rf_MSE))
 
 # Bagging
 
+Next, a Bagging model was fit to the dataset as it was thought that a Bagging model’s methods of using collections of training data subsets to train multiple decision trees, of which the average would be used, would not only help avoid overfitting the data, but provide a more robust prediction of housing prices than a single Decision Tree model. The test MSE of the Bagging model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \
+
 ```{r bag}
 # 1. Perform bagging on your training
 bag_fit <- randomForest(SalePrice ~ ., data = train2, mtry = ncol(train2) - 1, importance = TRUE)
@@ -321,6 +323,8 @@ lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
 ```
 
 # Boosting
+
+An AdaBoost Boosting model was also fit as it was thought that a Boosting model may increase predictive accuracy of housing prices via its ability add strength or weight to specific classifiers after taking into account the previous classifier’s success. It was thought that a Boosting model would help reduce dimensionality by resulting in significant classifiers being assigned higher weights than less significant classifiers. The test MSE of the AdaBoost Boosting model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \ 
 
 ```{r boost, warning=FALSE}
 lambs <- seq(0.001, 0.05, length.out = 50)
