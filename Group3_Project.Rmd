@@ -488,6 +488,8 @@ insertRow <- function(existingDF, newrow, r) {
 pred3 <- insertRow(pred2, newrow, r)
 pred3
 
+write.csv(pred3, "/cloud/project/SalePricePredictions.csv", row.names = FALSE)
+
 ```
 ```{r plot}
 
