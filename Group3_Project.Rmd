@@ -59,7 +59,7 @@ After importing the testing and training data from the Kaggle repository, an ini
 
 #visualize number of NA per variable
 train_na <- train[,which(colSums(is.na(train)) > 0)]
-gg_miss_var(train) + labs(y = "Number NA")
+gg_miss_var(train_na) + labs(y = "Number NA")
 
 #convert these levels to characters (later be converted to levels)
 #not continuous variables
@@ -91,7 +91,7 @@ train1 <- as.data.frame(unclass(train1), stringsAsFactors = TRUE)
 train1$LotFrontage <- as.integer(train1$LotFrontage)
 train1$MasVnrArea <- as.integer(train1$MasVnrArea)
 train1$GarageYrBlt <- as.integer(train1$LotFrontage)
-train1$SalePrice <- as.integer(train1$MasVnrArea)
+train1$SalePrice <- as.integer(train1$SalePrice)
 
 #sapply(train, class)
 #cbind(lapply(lapply(train1, is.na), sum))
@@ -436,6 +436,7 @@ test1$BsmtFullBath <- as.integer(test1$BsmtFullBath)
 test1$BsmtHalfBath <- as.integer(test1$BsmtHalfBath)
 test1$GarageCars  <- as.integer(test1$GarageCars)
 test1$GarageArea <- as.integer(test1$GarageArea)
+
 
 #sapply(test1, class)
 #cbind(lapply(lapply(test1, is.na), sum))

@@ -71,6 +71,7 @@ set.seed(445)
         \begin{itemize}
             \item[--] Decision Tree
             \item[--] Random Forest
+            \item[--] Bagging
             \item[--] LASSO
             \item[--] Boosting
             \end{itemize}
@@ -215,7 +216,7 @@ plot_grid(plot1, plot2, labels = "AUTO")
 # Log Transform the Data
 These are the plots showing Sale Price after the log transformation. 
 
-```{r log2, warning=FALSE, message=FALSE, echo=FALSE, fig.height=5}
+```{r log2, warning=FALSE, message=FALSE echo=FALSE, fig.height=5}
 train1$SalePrice <- log(train1$SalePrice)
 
 plot3 <- ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
