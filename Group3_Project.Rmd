@@ -467,9 +467,6 @@ rf2 <- randomForest(SalePrice ~., train1, mtry=floor(sqrt(ncol(train1)-1)), impo
 ```
 
 
-
-
-
 # References
 
 Ames, Iowa: Alternative to the Boston Housing Data as an ... http://jse.amstat.org/v19n3/decock.pdf. 

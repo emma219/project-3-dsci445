@@ -6,11 +6,7 @@ output:
     theme: default
     colortheme: beaver
     fonttheme: structurebold
-<<<<<<< HEAD
-=======
     incremental: true
-  
->>>>>>> d0c602ad129b3b2e553b29d163bdee776b77fd99
 ---
 
 ```{r setup, results='hide', warning=FALSE, message=FALSE, include=FALSE}
@@ -296,6 +292,33 @@ rf_MSE <- mean((predict(rf, test2) - test2$SalePrice)^2)
 
 ```
 
+# Bagging
+
+```{r bag, echo=FALSE}
+# 1. Perform bagging on your training
+bag_fit <- randomForest(SalePrice ~ ., data = train2, mtry = ncol(train2) - 1, importance = TRUE)
+
+# 2. Make a plot of the importance values for each predictor
+# data.frame(bag_fit$importance )%>%
+#   mutate(variable = rownames(bag_fit$importance)) %>%
+#   mutate(variable = factor(variable, levels = variable[order(MeanDecreaseGini)])) %>% ## trick to plot variable by descending Gini
+#   ggplot() +
+#   geom_point(aes(MeanDecreaseGini, variable))
+
+varImpPlot(bag_fit, sort = TRUE, 
+           n.var = 10, main = "Variables with most Predictive Power")
+
+bag_MSE <- mean((predict(bag_fit, test2) - test2$SalePrice)^2)
+
+# # 3. Estimate the test error rate using your bagged tree model.
+# confusion_bag <- table(pred = predict(bag_fit, test2, type = "class"), true = test2$SalePrice)
+# 
+# ## test error rate
+# (confusion_bag[1, 2] + confusion_bag[2, 1])/sum(confusion_bag)
+# 
+# confusion_bag
+```
+
 # Boosting
 
 ```{r boost, warning=FALSE, echo=FALSE}
@@ -371,8 +394,8 @@ plot(cv.lasso)
 # Table of Test MSE Values
 
 ```{r mse, echo=FALSE}
-MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Boosted Forest", "LASSO"), 
-                        MSE = c(dt_MSE, rf_MSE, boost_MSE, lasso_MSE))
+MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Bagging", "Boosted Forest", "LASSO"), 
+                        MSE = c(dt_MSE, rf_MSE, bag_MSE, boost_MSE, lasso_MSE))
 
 kable((MSE_table), caption = "Test MSE Values for Different Models", digits = 4)
 ```
