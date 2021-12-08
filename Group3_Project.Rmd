@@ -273,15 +273,7 @@ print(paste("Random Forest Test MSE = ", rf_MSE))
 Next, a Bagging model was fit to the dataset as it was thought that a Bagging model’s methods of using collections of training data subsets to train multiple decision trees, of which the average would be used, would not only help avoid overfitting the data, but provide a more robust prediction of housing prices than a single Decision Tree model. The test MSE of the Bagging model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \
 
 ```{r bag}
-# 1. Perform bagging on your training
 bag_fit <- randomForest(SalePrice ~ ., data = train2, mtry = ncol(train2) - 1, importance = TRUE)
-
-# 2. Make a plot of the importance values for each predictor
-# data.frame(bag_fit$importance )%>%
-#   mutate(variable = rownames(bag_fit$importance)) %>%
-#   mutate(variable = factor(variable, levels = variable[order(MeanDecreaseGini)])) %>% ## trick to plot variable by descending Gini
-#   ggplot() +
-#   geom_point(aes(MeanDecreaseGini, variable))
 
 varImpPlot(bag_fit, sort = TRUE, 
            n.var = 10, main = "Variables with most Predictive Power")
@@ -289,13 +281,6 @@ varImpPlot(bag_fit, sort = TRUE,
 bag_MSE <- mean((predict(bag_fit, test2) - test2$SalePrice)^2)
 bag_MSE
 
-# # 3. Estimate the test error rate using your bagged tree model.
-# confusion_bag <- table(pred = predict(bag_fit, test2, type = "class"), true = test2$SalePrice)
-# 
-# ## test error rate
-# (confusion_bag[1, 2] + confusion_bag[2, 1])/sum(confusion_bag)
-# 
-# confusion_bag
 ```
 
 # LASSO
@@ -374,7 +359,6 @@ Predict Sale Price using Random Forest
 ```{r testdata, echo=FALSE, warning=FALSE, message=FALSE}
 #first get test data similar to training data
 #visualize number of NA per variable
-#gg_miss_var(test) + labs(y = "Number NA")
 test_na <- test[,which(colSums(is.na(test)) > 0)]
 gg_miss_var(test_na) + labs(y="Number NA")
 
@@ -449,24 +433,69 @@ test1$GarageArea <- as.integer(test1$GarageArea)
 
 #MSSubClass --> 150
 #only one instance --> remove that row
-
 test1 %>% 
   group_by(MSSubClass) %>%
   summarise(no_rows = length(MSSubClass))
 
+#save Id and row number from where this was taken
+#will need to add a value for this later
+row_Sub_150 <- which(test1$MSSubClass == "150")
+id_Sub_150 <- test1[row_Sub_150, "Id"]
+id_Sub_150
+
+
 test3 <- droplevels(test1[!test1$MSSubClass == "150",])
 
-str(train1)
-str(test3)
+#str(train1)
+#str(test3)
+
+#make levels in train present in test
+for(col in colnames(test3)) {
+  if(class(test3[, col]) == "factor") {
+    test3[, col] <- factor(test3[, col], levels = levels(train1[, col]))
+  }
+}
+
+# test3$Exterior1st <- factor(test3$Exterior1st, levels = levels(train1$Exterior1st))
+# identical(levels(test3$Exterior1st), levels(train1$Exterior1st))
 
 ```
 
 ```{r predRF}
+#fit rf (chosen model of the ones used)
 rf2 <- randomForest(SalePrice ~., train1, mtry=floor(sqrt(ncol(train1)-1)), importance=TRUE)
 
-#predict(rf2, test3)
+pred <- data.frame(predict(rf2, test3))
+
+#take exp of sale price --> did log transformation previously
+pred.sale <- exp(pred)
+
+#make table with SalePrice and Id
+names(pred.sale)[1] <- 'SalePrice'
+pred.sale$Id <- test3$Id
+
+pred2 <- pred.sale[c("Id", "SalePrice")]
+
+#get mean SalePrice --> will add this to row where the MSSubClass of 150 was removed
+mean_price <- mean(pred2$SalePrice)
+
 ```
 
+```{r sub}
+#add row for the MSSubClass row that was removed
+r <- row_Sub_150
+newrow <- cbind(id_Sub_150, mean_price)
+
+insertRow <- function(existingDF, newrow, r) {
+  existingDF[seq(r+1,nrow(existingDF)+1),] <- existingDF[seq(r,nrow(existingDF)),]
+  existingDF[r,] <- newrow
+  existingDF
+}
+
+pred3 <- insertRow(pred2, newrow, r)
+pred3
+
+```
 
 # References
 
