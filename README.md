@@ -32,3 +32,7 @@ One the ideal model was determined. Given the complexity, interpretability, and 
 
 The test data provided from Kaggle was then addressed. It was prepossessed so that it would be similar to the training data also provided from Kaggle. 
 
+There was only one observation of a level that was present in the test data that was not in the training data, the row number and Id were saved, the average SalePrice and the original Id would be inserted at that row after prediction
+
+SalePrice was predicted using the Random Forest model, the output was formatted and the missing row was added
+
