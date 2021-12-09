@@ -81,7 +81,7 @@ getmode <- function(n) {
 mode_Electrical <- getmode(train$Electrical)
 train$Electrical[is.na(train$Electrical)] <- mode_Electrical
 
-#change the NA level in the categorical variables to NONE
+#change the NA level in the categorical variables to None
 train1 <- train %>%
  mutate_if(is.character, ~ fct_explicit_na(., na_level = "None"))
 
@@ -358,6 +358,8 @@ kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
 
 # Predict Sale Price using Random Forest
 
+|   The final step of the project was to take the test data supplied from Kaggle and use our best model, we decided to use the Random Forest model for the reasons previously explored, and predict the SalePrice using the model and the test data.
+|   The data had to be configured similarly to that of the training data. The NA values needed to be addressed in the same way and in addition to that the levels of the training data needed to be present in the test data before prediction could even be done. 
 ```{r testdata, echo=FALSE, warning=FALSE, message=FALSE}
 #first get test data similar to training data
 #visualize number of NA per variable
@@ -454,6 +456,8 @@ for(col in colnames(test3)) {
 
 ```
 
+|   Once the test data was properly configured, the Random Forest model was fit using the entire training set and the predcition of SalePrice using the configured test data was made.
+
 ```{r predRF, cache=TRUE}
 #fit rf (chosen model of the ones used)
 rf2 <- randomForest(SalePrice ~., train1, mtry=floor(sqrt(ncol(train1)-1)), importance=TRUE)
@@ -490,8 +494,11 @@ pred3 <- insertRow(pred2, newrow, r)
 ```
 
 # Results
+|   The predicted Sale Price was submitted to Kaggle and a score of 0.14931 was given. According to the Kaggle competition, this score is calculated by taking the root mean squared error between the logarithm of the predicted value and the logarithm of the observed sales price. 
 
 # Outside Exploration
+|   An original hope for the project was to see if this model and data could be applied outside of the original population. We worked with the co-owner of Deluxe Homes LLC, Stu Sprecher who is a licensed contractor to explore what we had been finding and get some industry insights. The first problem that was discovered was that all of the models were showing that predictors such as Neighborhood and OverallQuality were very significant in predicting sale price. This was an issue as for starters, the neighborhoods of Ames, Iowa cannot be easily compared to a neighborhoods in Berthoud, Colorado. Additionally, these quality ratings are very subjective, what Stu may rate an 8, Dean De Cock who compiled this data, might rate as a 6 for example. Stu also pointed out that this model and data fail to consider certain aspects involved in building a home that can impact sale price. An example he kept returning to was the soil quality. Where he has started to build in Serverance, Colorado has much poorer soil quality then where he was building in Berthoud, Colorado. As such, it costs a lot for to reinforce the foundation to account for that poor soil quality and as such the price of the home will increase. Additionally, prices of building materials has shifted recently, making production of a home more costly which also impacts that sale price. 
+|   Once it was concluded that fitting the model using data provided from Stu in the Berthoud, Colorado area would not be ideal, we considered finding similar data in Ames but more recent. Through further considerations that would also prove problematic as the housing market has shifted in the last decade and it is hard to determine if the significance of a predictor such as Neighborhood has also shifted. Ultimately, it appears that the Ames, Iowa housing data appears to simply be a snap shot in time. It can help predict sale prices for that area in that given time frame but with so many influences outside of the data it is hard to use this data, and the models that are fit with the data, to predict housing prices for other locations or even dates.
 
 # References
 
