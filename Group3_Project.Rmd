@@ -2,11 +2,10 @@
 title: "Housing Prices Analysis"
 author: "Mandey Brown, Megan Dunnahoo, Emma Hamilton"
 output:
-  beamer_presentation: default
   pdf_document: default
 ---
 
-```{r setup, results='hide', warning=FALSE, message=FALSE}
+```{r setup, results='hide', warning=FALSE, message=FALSE, echo=FALSE}
 library(knitr)
 library(dplyr)
 library(tidyr)
@@ -22,6 +21,7 @@ library(randomForest)
 library(pls)
 library(e1071)
 library(formatR)
+library(gridExtra)
 
 ```
 
@@ -54,7 +54,7 @@ train <- read.csv("/cloud/project/train.csv")
 
 |   After importing the testing and training data from the Kaggle repository, an initial analysis of missing values was conducted:
 
-```{r nas, warning=FALSE, message=FALSE, echo=FALSE}
+```{r nas, warning=FALSE, message=FALSE, echo=FALSE, fig.height=4}
 #handle NA/missing values
 #Approach:
   #convert NA to another level name for categorical 
@@ -63,7 +63,7 @@ train <- read.csv("/cloud/project/train.csv")
 
 #visualize number of NA per variable
 train_na <- train[,which(colSums(is.na(train)) > 0)]
-gg_miss_var(train_na) + labs(y = "Number NA")
+gg_miss_var(train_na) + labs(y = "Number NA") + ggtitle("Variables With One or More NA Values")
 
 #convert these levels to characters (later be converted to levels)
 #not continuous variables
@@ -123,54 +123,46 @@ LotFrontage > 250  (>17%) Missing Values \
 
 # Exploratory Data Analysis
 
-|   In order to better understand the data and gain insight into the relationship between variables, an explanatory data analysis was performed. 
+|   In order to better understand the data and gain insight into the relationship between variables, an exploratory data analysis was performed. 
 
-```{r explore, warning=FALSE, message=FALSE, echo=FALSE}
-# See how time variables effect sale price
-ggplot(train1, aes(x=YrSold, y=SalePrice)) +
-  geom_point() +
-  stat_summary(fun = "mean", geom = "point", color="red") +
-  stat_summary(fun = "median", geom = "point", color="blue") +
-  ggtitle("Year Sold vs Sale Price") + xlab("Year Sold")
+## Time variables
 
-ggplot(train1, aes(x=MoSold, y=SalePrice)) +
-  geom_point() +
-  stat_summary(fun = "mean", geom = "point", color="red") +
-  stat_summary(fun = "median", geom = "point", color="blue") +
-  ggtitle("Month Sold vs Sale Price") + xlab("Month Sold")
-
-ggplot(train1, aes(x=YearBuilt, y=SalePrice)) +
-  geom_point() +
-  stat_summary(fun = "mean", geom = "point", color="red") +
-  stat_summary(fun = "median", geom = "point", color="blue") +
-  ggtitle("Year Built vs Sale Price") + xlab("Year Built")
-
-ggplot(train1, aes(x=YearRemodAdd, y=SalePrice)) +
-  geom_point() +
-  stat_summary(fun = "mean", geom = "point", color="red") +
-  stat_summary(fun = "median", geom = "point", color="blue") +
-  ggtitle("Year Remodeled vs Sale Price") + xlab("Year Remodeled")
-
-# Size indicator variables
-df_size <- train1 %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath, TotRmsAbvGrd, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, GarageArea, SalePrice))
-ggpairs(df_size)
-ggcorr(df_size, method = c("everything", "pearson"))
-
-# Quality variables
-df_qual <- train1 %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, GarageQual, SalePrice))
-ggpairs(df_qual)
-
-# Condition variables
-df_cond <- train1 %>% select(c(OverallCond, ExterCond, BsmtCond, GarageCond, SalePrice))
-ggpairs(df_cond)
-```
-
-|   The first relationship explored in the Exploratory Data Analysis was the relationship between variables which involve time and SalePrice. These relationships were plotted as:
+|   The first series of relationships explored in the Exploratory Data Analysis was the relationships between SalePrice and variables which involve time. These relationships were plotted as:
 
 Sale Price vs. Year Sold \
 Sale Price vs. Month Sold \
 Sale Price vs. Year Built \
 Sale Price vs. Year Remodeled \
+
+```{r explore, warning=FALSE, message=FALSE, echo=FALSE}
+# See how time variables effect sale price
+p1 <- ggplot(train1, aes(x=YrSold, y=SalePrice)) +
+  geom_point() +
+  stat_summary(fun = "mean", geom = "point", color="red") +
+  stat_summary(fun = "median", geom = "point", color="blue") +
+  ggtitle("Year Sold vs Sale Price") + xlab("Year Sold")
+
+p2 <- ggplot(train1, aes(x=MoSold, y=SalePrice)) +
+  geom_point() +
+  stat_summary(fun = "mean", geom = "point", color="red") +
+  stat_summary(fun = "median", geom = "point", color="blue") +
+  ggtitle("Month Sold vs Sale Price") + xlab("Month Sold")
+
+p3 <- ggplot(train1, aes(x=YearBuilt, y=SalePrice)) +
+  geom_point() +
+  stat_summary(fun = "mean", geom = "point", color="red") +
+  stat_summary(fun = "median", geom = "point", color="blue") +
+  ggtitle("Year Built vs Sale Price") + xlab("Year Built")
+
+p4 <- ggplot(train1, aes(x=YearRemodAdd, y=SalePrice)) +
+  geom_point() +
+  stat_summary(fun = "mean", geom = "point", color="red") +
+  stat_summary(fun = "median", geom = "point", color="blue") +
+  ggtitle("Year Remodeled vs Sale Price") + xlab("Year Remodeled")
+
+grid.arrange(p1, p2, p3, p4, ncol=2)
+
+```
 
 |   The rather flat relationship between Sale Price and Year Sold proved interesting as it was thought that this relationship would show to be predominantly positive. It's been hypothesized that the housing market crash of 2007 might have affected this relationship. 
 
@@ -180,20 +172,42 @@ Sale Price vs. Year Remodeled \
 
 |   The relationship between Sale Price and Year Remodeled also was expected with a slightly positive relationship shown.
 
+## Other Variable Subsets
 
-|   The second part of the Exploratory Data Analysis was to create multiple scatter plot matrices for indicator variables, quality variables, and condition variables. Here a predominantly positive relationship between Sale Price and the indicator variables was found. However, what stood out most was the skewed distribution of the Sale Price variable across all three scatterplot matrices. Upon further analysis it was discovered that the SalePrice variable should be log transformed.  
+|   The second part of the Exploratory Data Analysis involved creating ggpairs plots, which shows an overview of relationships between variables. We did this on different subsets of variables indicating size, quality, and condition. We also created a correlation plot on the subset of size indicator variables. 
 
+```{r explore2, warning=FALSE, message=FALSE, echo=FALSE, fig.width=3.5, fig.height=3}
+
+# Size indicator variables
+df_size <- train1 %>% select(c(GrLivArea, TotalBsmtSF, BsmtFullBath, BsmtHalfBath, TotRmsAbvGrd, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, GarageArea, SalePrice))
+par(mfrow=c(1,2))
+ggpairs(df_size, title="Size Indicator Variables")
+ggcorr(df_size, method = c("everything", "pearson"))
+
+# Quality variables
+df_qual <- train1 %>% select(c(OverallQual, ExterQual, HeatingQC, KitchenQual, BsmtQual, GarageQual, SalePrice))
+
+# Condition variables
+df_cond <- train1 %>% select(c(OverallCond, ExterCond, BsmtCond, GarageCond, SalePrice))
+par(mfrow=c(1,2))
+ggpairs(df_qual, title="Quality Indicator Variables")
+ggpairs(df_cond, title="Condition Indicator Variables")
+```
+
+|   Here, a predominantly positive relationship between Sale Price and the indicator variables was found. However, what stood out most was the skewed distribution of the Sale Price variable across all three scatterplot matrices. Upon further analysis, it was decided that the SalePrice variable should be log transformed.  
 
 # Log Transform the Data
 
 |   The SalePrice variable was log transformed due to having a skewed distribution first discovered in the Exploratory Data Analysis. 
 
-```{r, message=FALSE, warning=FALSE, echo=FALSE}
-ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=2}
+p5 <- ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
 
-ggplot(data = train1, aes(sample = SalePrice)) + 
+p6 <- ggplot(data = train1, aes(sample = SalePrice)) + 
   stat_qq() +
   stat_qq_line()
+
+grid.arrange(p5, p6, ncol=2)
 
 ```
 
@@ -201,25 +215,27 @@ ggplot(data = train1, aes(sample = SalePrice)) +
 |   Further analysis of the SalePrice variable showed a non-normal right-skewed distribution in the above histogram. This non-normal distribution is also evident in the above (Q-Q) plot where the observations curve off of the line indicating the distribution is skewed. 
 
 
-```{r, message=FALSE, warning=FALSE, echo=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=2}
 
 train1$SalePrice <- log(train1$SalePrice)
 
-ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
+p7 <- ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
 
-ggplot(data = train1, aes(sample = SalePrice)) + 
+p8 <- ggplot(data = train1, aes(sample = SalePrice)) + 
   stat_qq() +
   stat_qq_line()
+
+grid.arrange(p7, p8, ncol=2)
 
 ```
 
 
-|   After log-transforming the SalePrice variable we now see a normal bell-curve shape in the distribution in the above histogram. The above (Q-Q) plot now shows the observations sticking closely to the line without any curvature away from the line. 
+|   After log-transforming the SalePrice variable, we now see a normal bell-curve shape in the distribution in the above histogram. The above (Q-Q) plot now shows the observations sticking closely to the line without any curvature away from the line. 
 
 
-# Provide test set that contains Sale Price
+# Provide a test set that contains Sale Price
 
-|   Upon further analysis, it was discovered that an aspect of the Kaggle Competition was that the test data set did not contain a SalePrice column as this is the condition for ranking the effectiveness of the predictive models submitted. Therefore, the training data set was split into new test and training sets in order to analyze the data and fit the models. 
+|   Upon further analysis, it was discovered that an aspect of the Kaggle Competition was that the test data set did not contain a SalePrice column as this is the condition for ranking the effectiveness of the predictive models submitted. Therefore, the training data set was split into new test and training sets in order to analyze the data and fit the models. This allowed us to produce test MSE values, which showed us the accuracy of the fitted models and gave us values to compare the models against each other. We decided on a 70/30 training/test split, which was selected randomly on the training data.  
 
 ```{r testSet, echo=FALSE}
 # Split training set into new test and train sets so test set has SalePrice
@@ -227,15 +243,14 @@ n <- nrow(train1)
 train_split <- seq_len(n) %in% sample(seq_len(n), round(0.7 * n))
 train2 <- data.frame(train1[train_split,])
 test2 <- data.frame(train1[-train_split,])
-
 ```
 
 # Decision Tree
 
-|   A Decision Tree model was first explored as was thought that the output would be easily interpreted and its graphical representations would be straightforwardly related to predicting Sale Price.
+|   A Decision Tree model was first explored as it was thought that the output would be easily interpreted and its graphical representations would be straightforwardly related to predicting Sale Price.
 | In order to fit the Decision Tree, a SalePrice tree was first created. From that tree, the variables used were listed along with omitted variables. The tree was subsequently plotted and the test MSE of the tree was calculated. The test MSE of the Decision Tree was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price.   
 
-```{r tree, collapse=TRUE, echo=FALSE}
+```{r tree, collapse=TRUE, echo=FALSE, fig.height=5}
 # Create SalePrice tree
 tree.SP <- tree(SalePrice ~., data = train2)
 
@@ -258,7 +273,7 @@ print(paste("Decision Tree Test MSE = ", dt_MSE))
 
 
 # Random Forest
-|   A Random Forest model was also fit as it was believed that it would be able to handle large data sets containing higher dimensionality, which was thought to be an appropriate choice as the Ames housing data set contains 79 variables. A Random Forest model was also chosen as it is able to “reduce correlation between trees by injecting more randomness into the tree-growing process” (Greenwell et al). It was also chosen as a means of identifying which of the 79 variables were significant while predicting house price. \
+|   A Random Forest model was also fit as it was believed that it would be able to handle large data sets containing higher dimensionality, which was thought to be an appropriate choice as the Ames housing data set contains 79 variables. Additionally, this model was chosen as it is able to “reduce correlation between trees by injecting more randomness into the tree-growing process” (Greenwell et al), and act as a means of identifying which of the 79 variables were significant while predicting house sale price. 
 |   After fitting the Random Forest model, the variables with the most predictive power were found. The test MSE of the Random Forest model was then calculated. The test MSE of the Random Forest model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. 
 
 ```{r randomForest, cache=TRUE, echo=FALSE}
@@ -274,7 +289,7 @@ print(paste("Random Forest Test MSE = ", rf_MSE))
 
 # Bagging
 
-|   Next, a Bagging model was fit to the data set as it was thought that a Bagging model’s methods of using collections of training data subsets to train multiple decision trees, of which the average would be used, would not only help avoid overfitting the data, but provide a more robust prediction of housing prices than a single Decision Tree model. The test MSE of the Bagging model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \
+|   Next, a Bagging model was fit to the data set as it was thought that a Bagging model’s methods of using collections of training data subsets to train multiple decision trees, of which the average would be used, would not only help avoid overfitting the data, but provide a more robust prediction of housing sale prices than a single Decision Tree model. The test MSE of the Bagging model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price.  
 
 ```{r bag, cache=TRUE, echo=FALSE}
 bag_fit <- randomForest(SalePrice ~ ., data = train2, mtry = ncol(train2) - 1, importance = TRUE)
@@ -289,10 +304,10 @@ bag_MSE
 
 # LASSO
 
-|   As feature selection was thought to be a large component of the project, a LASSO model was chosen as it offers high prediction accuracy as aids with high dimensionality by shrinking the regression coefficients (some of them to zero).\
-|   In order to fit a LASSO model, first the training and testing split data were transformed into matrices and lambda values were added. The coefficients were plotted along with test MSE at different lambda values. The best test MSE of the LASSO model was then calculated. The test MSE of the LASSO model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \ 
+|   As feature selection was thought to be a large component of the project, a LASSO model was chosen as it offers high prediction accuracy and aids with high dimensionality by shrinking the regression coefficients (some of them to zero).   
+|   In order to fit a LASSO model, first, the training and testing data were transformed into matrices and lambda values were added. The coefficients were plotted along with test MSE at different lambda values. The best test MSE of the LASSO model was then calculated. The test MSE of the LASSO model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price.   
 	
-```{r lasso, cache=TRUE, echo=FALSE}
+```{r lasso, cache=TRUE, echo=FALSE, fig.width=3.5}
 trnmat<-model.matrix(SalePrice ~ ., data = train2)
 tstmat<-model.matrix(SalePrice ~ ., data = test2)
 
@@ -319,9 +334,9 @@ lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
 
 # Boosting
 
-|   An AdaBoost Boosting model was also fit as it was thought that a Boosting model may increase predictive accuracy of housing prices via its ability add strength or weight to specific classifiers after taking into account the previous classifier’s success. It was thought that a Boosting model would help reduce dimensionality by resulting in significant classifiers being assigned higher weights than less significant classifiers. The test MSE of the AdaBoost Boosting model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \ 
+|   An AdaBoost Boosting model was also fit as it was thought that a Boosting model may increase predictive accuracy of housing sale prices via its ability add strength or weight to specific classifiers after taking into account the previous classifier’s success. It was also thought that a Boosting model would help reduce dimensionality by resulting in significant classifiers being assigned higher weights than less significant classifiers. The test MSE of the AdaBoost Boosting model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price.   
 
-```{r boost, warning=FALSE, cache=TRUE, echo=FALSE}
+```{r boost, warning=FALSE, cache=TRUE, echo=FALSE, fig.width=3.5}
 lambs <- seq(0.001, 0.05, length.out = 50)
 length_lamb <- length(lambs)
 tr_err <- rep(NA, length_lamb)
@@ -337,6 +352,10 @@ for(i in 1:length_lamb) {
 plot(lambs, tr_err, type="b", xlab="Lambda", "ylab"="Training MSE")
 
 plot(lambs, test_err, type="b", xlab="Lambda", "ylab"="Test MSE")
+
+```
+
+```{r boost2, warning=FALSE, cache=TRUE, echo=FALSE}
 boost_fit <- gbm(SalePrice ~ ., data = train2, distribution = "gaussian", n.trees = 1000, shrinkage = lambs[which.min(test_err)])
 
 summary(boost_fit)
@@ -349,13 +368,13 @@ boost_MSE
 
 # Table of Test MSE Values
 
-|   In order to compare the test MSE values of the chosen models, a table was created. The table shows that the MSE for the Bagging and Random Forest models to be the smallest with Bagging having a slightly smaller MSE. However, the Random Forest model was still selected as it has better interpretability when compared to Bagging. And the difference in MSE is not drastic. 
+|   In order to compare the test MSE values of the chosen models, a table was created. The table shows that the MSE for the Bagging and Random Forest models to be the smallest with Bagging having a slightly smaller MSE. However, the Random Forest model was ultimately selected as it has better interpretability when compared to Bagging, and the difference in MSE is not drastic. 
 
 ```{r, echo=FALSE}
 MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Bagged Forest", "Boosted Forest", "LASSO"), 
                         MSE = c(dt_MSE, rf_MSE, bag_MSE, boost_MSE, lasso_MSE))
 
-kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
+kable((MSE_table), caption = "Test MSE Values for Different Models", digits = 4)
 ```
 
 # Predict Sale Price using Random Forest
@@ -366,7 +385,7 @@ kable((MSE_table), caption = "MSE Values for Different Models", digits = 4)
 #first get test data similar to training data
 #visualize number of NA per variable
 test_na <- test[,which(colSums(is.na(test)) > 0)]
-gg_miss_var(test_na) + labs(y="Number NA")
+gg_miss_var(test_na) + labs(y="Number NA") + ggtitle("Variables With One or More NA Values")
 
 #convert these levels to characters (later be converted to levels)
 #not continuous variables
@@ -426,7 +445,7 @@ for(col in colnames(test1)) {
 
 ```
 
-```{r newlevels, echo=FALSE}
+```{r newlevels, echo=FALSE, include=FALSE}
 #Remove rows that contain levels in test that are not in train
 #cant perform any prediction if this is the case
 
@@ -496,7 +515,7 @@ pred3 <- insertRow(pred2, newrow, r)
 ```
 
 # Results
-|   The predicted Sale Price was submitted to Kaggle and a score of 0.14931 was given. According to the Kaggle competition, this score is calculated by taking the root mean squared error between the logarithm of the predicted value and the logarithm of the observed sales price. This places us at 3074 out of 5396 submissions. However, most of the top 1000 submissions had RMSE scores of about 0.12, which isn't that far off from our score. Overall, we were able to create a fairly accurate model  
+|   In this project, five models were created and fit with training data. The top two models, Bagging and Random Forest, resulted in test MSE values of 0.0096 and 0.0097, respectively, on the portion of training data set aside for testing. The Random Forest model was selected to predict Sale Price values on the Kaggle test set. The predicted Sale Price values were submitted to Kaggle and a score of 0.14931 was given. According to the Kaggle competition, this score is calculated by taking the root mean squared error between the logarithm of the predicted value and the logarithm of the observed sales price. This corresponds to a place of 3074 out of 5396 submissions. However, most of the top 1000 submissions had RMSE scores of about 0.12, which isn't very far off from the score obtained using the Random Forest model created in this project. Overall, the selected model was proven to be fairly accurate at predicting Sale Price.   
 
 # Outside Exploration
 |   An original hope for the project was to see if this model and data could be applied outside of the original population. We worked with the co-owner of Deluxe Homes LLC, Stu Sprecher who is a licensed contractor to explore what we had been finding and get some industry insights. The first problem that was discovered was that all of the models were showing that predictors such as Neighborhood and OverallQuality were very significant in predicting sale price. This was an issue as for starters, the neighborhoods of Ames, Iowa cannot be easily compared to a neighborhoods in Berthoud, Colorado. Additionally, these quality ratings are very subjective, what Stu may rate an 8, Dean De Cock who compiled this data, might rate as a 6 for example. Stu also pointed out that this model and data fail to consider certain aspects involved in building a home that can impact sale price. An example he kept returning to was the soil quality. Where he has started to build in Severance, Colorado has much poorer soil quality then where he was building in Berthoud, Colorado. As such, it costs a lot for to reinforce the foundation to account for that poor soil quality and as such the price of the home will increase. Additionally, prices of building materials has shifted recently, making production of a home more costly which also impacts that sale price. 
