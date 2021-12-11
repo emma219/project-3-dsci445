@@ -1,7 +1,9 @@
 ---
 title: "Housing Prices Analysis"
 author: "Mandey Brown, Megan Dunnahoo, Emma Hamilton"
-output: pdf_document
+output:
+  beamer_presentation: default
+  pdf_document: default
 ---
 
 ```{r setup, results='hide', warning=FALSE, message=FALSE}
@@ -23,7 +25,7 @@ library(formatR)
 
 ```
 
-```{r}
+```{r, echo=FALSE}
 #reproducibility
 set.seed(445)
 
@@ -35,15 +37,15 @@ knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE, fig.width = 6,
 |   In addition to the majority of the population benefiting from predictions of housing prices, many professions and industries would benefit as well. Home appraisers, mortgage lenders, insurers, and tax assessors would be able to more accurately asses the value of a home. Housing price predictions would also prove invaluable for home builders. For this project, the co-owner of Deluxe Homes LLC was interviewed in order to gain more industry insight. The co-owner, Stu Sprecher emphasized the need for flexible pricing predictions that would enable home builders to maintain a profit margin while ordering materials and hiring contractors for each home built. The ability to customize house price predictions to a specific home could prove invaluable for him as an industry professional.
 
 # Methodology
-|   Built off the Kaggle competition, *House Prices - Advanced Regression Techniques,* this project utilizes housing prices compiled by Dean De Cock in 2011, which describes the sale of individual residential property in Ames, Iowa from 2006 to 2010. The dataset includes 79 explanatory variables (23 nominal, 23 ordinal, 14 discrete, and 20 continuous) all involved in evaluating home values. In order to build predictive models for housing price, an exploratory analysis was conducted followed by preprocessing. The project focuses on advanced regression models including a Decision Tree, Random Forest, Bagging, LASSO, and out of curiosity, Boosting.  
+|   Built off the Kaggle competition, *House Prices - Advanced Regression Techniques,* this project utilizes housing prices compiled by Dean De Cock in 2011, which describes the sale of individual residential property in Ames, Iowa from 2006 to 2010. The data set includes 79 explanatory variables (23 nominal, 23 ordinal, 14 discrete, and 20 continuous) all involved in evaluating home values. In order to build predictive models for housing price, an exploratory analysis was conducted followed by preprocessing. The project focuses on advanced regression models including a Decision Tree, Random Forest, Bagging, LASSO, and out of curiosity, Boosting.  
 |   A Decision Tree model is first explored as the output is easily interpreted and its graphical representation can be straightforwardly related to the predicting housing price. Though the downfalls of Decision Trees are known, such as overfitting. Instead of taking the approach of pre-pruning the Decision Tree using $\chi^2$ test, which is “an algorithm used to find out the statistical significance between parent and child nodes” (Analytics Vidhya), or post-pruning using error estimation, in order to avoid overfitting and get a better understanding of the significance of the data’s variables, other models were explored, including Random Forest.  
-|   A Random Forest model was also fit to the dataset as it is able to handle large datasets containing higher dimensionality, which was thought to be an appropriate choice as the Ames housing dataset contains 79 variables. A Random Forest model was also chosen as it is able to “reduce correlation between trees by injecting more randomness into the tree-growing process” (Greenwell et al). It was also chosen as a means of identifying which of the 79 variables were significant while predicting house price.  
-|   In addition to a Random Forest model, a Bagging model was also fit to the dataset as it was thought that a Bagging model’s methods of using collections of training data subsets to train multiple decision trees, of which the average would be used, would not only help avoid overfitting the data, but provide a more robust prediction of housing prices than a single Decision Tree model.  
-|   As feature selection is a large component of this project, it was thought that a LASSO model would also prove useful for reducing dimensionality. A LASSO model was thought to offer high prediction accuracy for this dataset since the model’s method includes shrinking the regression coefficients (some of them to zero), while also reducing variance and minimizing bias.  
-|   An AdaBoost Boosting model was also fit as it was thought that a Boosting model may increase predictive accuracy of housing prices via its ability add strength or weight to specific classifiers after taking into account the previous classifier’s success. It was thought that a Boosting model would help reduce dimensionality by resulting in significant classifiers being assigned higher weights than less significant classifiers. However, it is believed that a Bagging model will perform better with this dataset than the chosen AdaBoost Boosting model, as Boosting does not help avoid over-fitting as a Bagging model does.
+|   A Random Forest model was also fit to the data set as it is able to handle large data sets containing higher dimensionality, which was thought to be an appropriate choice as the Ames housing data set contains 79 variables. A Random Forest model was also chosen as it is able to “reduce correlation between trees by injecting more randomness into the tree-growing process” (Greenwell et al). It was also chosen as a means of identifying which of the 79 variables were significant while predicting house price.  
+|   In addition to a Random Forest model, a Bagging model was also fit to the data set as it was thought that a Bagging model’s methods of using collections of training data subsets to train multiple decision trees, of which the average would be used, would not only help avoid overfitting the data, but provide a more robust prediction of housing prices than a single Decision Tree model.  
+|   As feature selection is a large component of this project, it was thought that a LASSO model would also prove useful for reducing dimensionality. A LASSO model was thought to offer high prediction accuracy for this data set since the model’s method includes shrinking the regression coefficients (some of them to zero), while also reducing variance and minimizing bias.  
+|   An AdaBoost Boosting model was also fit as it was thought that a Boosting model may increase predictive accuracy of housing prices via its ability add strength or weight to specific classifiers after taking into account the previous classifier’s success. It was thought that a Boosting model would help reduce dimensionality by resulting in significant classifiers being assigned higher weights than less significant classifiers. However, it is believed that a Bagging model will perform better with this data set than the chosen AdaBoost Boosting model, as Boosting does not help avoid over-fitting as a Bagging model does.
 	
 	
-```{r data}
+```{r data, echo=FALSE}
 test <- read.csv("/cloud/project/test.csv")
 train <- read.csv("/cloud/project/train.csv")
 ```
@@ -52,12 +54,12 @@ train <- read.csv("/cloud/project/train.csv")
 
 |   After importing the testing and training data from the Kaggle repository, an initial analysis of missing values was conducted:
 
-```{r nas, warning=FALSE, message=FALSE}
+```{r nas, warning=FALSE, message=FALSE, echo=FALSE}
 #handle NA/missing values
 #Approach:
   #convert NA to another level name for categorical 
   # or 0 for nominal 
-  # dont remove any columns
+  # don't remove any columns
 
 #visualize number of NA per variable
 train_na <- train[,which(colSums(is.na(train)) > 0)]
@@ -69,7 +71,7 @@ train$MSSubClass <- as.character(train$MSSubClass)
 train$OverallQual <- as.character(train$OverallQual)
 train$OverallCond <- as.character(train$OverallCond)
 
-#Only 1 NA in Electrial --> replace with Mode
+#Only 1 NA in Electrical --> replace with Mode
 #Also impractical to not have electricity
 
 #function to calculate the mode
@@ -112,7 +114,7 @@ MiscFeature  > 1250 (>85%) Missing Values \
 Alley        > 1250 (>85%) Missing Values \
 Fence        > 1000 (>68%) Missing Values \
 FireplaceQu  > 500  (>34%) Missing Values \
-LotFrontface > 250  (>17%) Missing Values \
+LotFrontage > 250  (>17%) Missing Values \
 
 |   In order to handle the NA/Missing Values, the NA level in the categorical variables were changed to 'None' as these NA values could not be imputed by using the mean, mode, or interpolation of the feature. This was because it was impossible and impractical to impute the value for the quality of a home's pool (PoolQC), when the home did not come with a pool. 
 
@@ -123,7 +125,7 @@ LotFrontface > 250  (>17%) Missing Values \
 
 |   In order to better understand the data and gain insight into the relationship between variables, an explanatory data analysis was performed. 
 
-```{r explore, warning=FALSE, message=FALSE}
+```{r explore, warning=FALSE, message=FALSE, echo=FALSE}
 # See how time variables effect sale price
 ggplot(train1, aes(x=YrSold, y=SalePrice)) +
   geom_point() +
@@ -186,7 +188,7 @@ Sale Price vs. Year Remodeled \
 
 |   The SalePrice variable was log transformed due to having a skewed distribution first discovered in the Exploratory Data Analysis. 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
 ggplot(data = train1, aes(SalePrice)) + geom_histogram(bins = 50)
 
 ggplot(data = train1, aes(sample = SalePrice)) + 
@@ -199,7 +201,7 @@ ggplot(data = train1, aes(sample = SalePrice)) +
 |   Further analysis of the SalePrice variable showed a non-normal right-skewed distribution in the above histogram. This non-normal distribution is also evident in the above (Q-Q) plot where the observations curve off of the line indicating the distribution is skewed. 
 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
 
 train1$SalePrice <- log(train1$SalePrice)
 
@@ -217,9 +219,9 @@ ggplot(data = train1, aes(sample = SalePrice)) +
 
 # Provide test set that contains Sale Price
 
-|   Upon further analysis, it was discovered that an aspect of the Kaggle Competition was that the test dataset did not contain a SalePrice column as this is the condition for ranking the effectiveness of the predictive models submitted. Therefore, the training dataset was split into new test and training sets in order to analyze the data and fit the models. 
+|   Upon further analysis, it was discovered that an aspect of the Kaggle Competition was that the test data set did not contain a SalePrice column as this is the condition for ranking the effectiveness of the predictive models submitted. Therefore, the training data set was split into new test and training sets in order to analyze the data and fit the models. 
 
-```{r testSet}
+```{r testSet, echo=FALSE}
 # Split training set into new test and train sets so test set has SalePrice
 n <- nrow(train1)
 train_split <- seq_len(n) %in% sample(seq_len(n), round(0.7 * n))
@@ -233,7 +235,7 @@ test2 <- data.frame(train1[-train_split,])
 |   A Decision Tree model was first explored as was thought that the output would be easily interpreted and its graphical representations would be straightforwardly related to predicting Sale Price.
 | In order to fit the Decision Tree, a SalePrice tree was first created. From that tree, the variables used were listed along with omitted variables. The tree was subsequently plotted and the test MSE of the tree was calculated. The test MSE of the Decision Tree was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price.   
 
-```{r tree, collapse=TRUE}
+```{r tree, collapse=TRUE, echo=FALSE}
 # Create SalePrice tree
 tree.SP <- tree(SalePrice ~., data = train2)
 
@@ -256,10 +258,10 @@ print(paste("Decision Tree Test MSE = ", dt_MSE))
 
 
 # Random Forest
-|   A Random Forest model was also fit as it was believed that it would be able to handle large datasets containing higher dimensionality, which was thought to be an appropriate choice as the Ames housing dataset contains 79 variables. A Random Forest model was also chosen as it is able to “reduce correlation between trees by injecting more randomness into the tree-growing process” (Greenwell et al). It was also chosen as a means of identifying which of the 79 variables were significant while predicting house price. \
+|   A Random Forest model was also fit as it was believed that it would be able to handle large data sets containing higher dimensionality, which was thought to be an appropriate choice as the Ames housing data set contains 79 variables. A Random Forest model was also chosen as it is able to “reduce correlation between trees by injecting more randomness into the tree-growing process” (Greenwell et al). It was also chosen as a means of identifying which of the 79 variables were significant while predicting house price. \
 |   After fitting the Random Forest model, the variables with the most predictive power were found. The test MSE of the Random Forest model was then calculated. The test MSE of the Random Forest model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. 
 
-```{r randomForest, cache=TRUE}
+```{r randomForest, cache=TRUE, echo=FALSE}
 rf <- randomForest(SalePrice ~., train2, mtry=floor(sqrt(ncol(train2)-1)), importance=TRUE)
 
 varImpPlot(rf, sort = TRUE, 
@@ -272,9 +274,9 @@ print(paste("Random Forest Test MSE = ", rf_MSE))
 
 # Bagging
 
-|   Next, a Bagging model was fit to the dataset as it was thought that a Bagging model’s methods of using collections of training data subsets to train multiple decision trees, of which the average would be used, would not only help avoid overfitting the data, but provide a more robust prediction of housing prices than a single Decision Tree model. The test MSE of the Bagging model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \
+|   Next, a Bagging model was fit to the data set as it was thought that a Bagging model’s methods of using collections of training data subsets to train multiple decision trees, of which the average would be used, would not only help avoid overfitting the data, but provide a more robust prediction of housing prices than a single Decision Tree model. The test MSE of the Bagging model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \
 
-```{r bag, cache=TRUE}
+```{r bag, cache=TRUE, echo=FALSE}
 bag_fit <- randomForest(SalePrice ~ ., data = train2, mtry = ncol(train2) - 1, importance = TRUE)
 
 varImpPlot(bag_fit, sort = TRUE, 
@@ -288,9 +290,9 @@ bag_MSE
 # LASSO
 
 |   As feature selection was thought to be a large component of the project, a LASSO model was chosen as it offers high prediction accuracy as aids with high dimensionality by shrinking the regression coefficients (some of them to zero).\
-|   In order to fit a LASSO model, first the training and testing split data were transformed into matrices and lambda values were added. The coefficients were plotted along with test MSE at different lambta values. The best test MSE of the LASSO model was then calculated. The test MSE of the LASSO model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \ 
+|   In order to fit a LASSO model, first the training and testing split data were transformed into matrices and lambda values were added. The coefficients were plotted along with test MSE at different lambda values. The best test MSE of the LASSO model was then calculated. The test MSE of the LASSO model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \ 
 	
-```{r lasso, cache=TRUE}
+```{r lasso, cache=TRUE, echo=FALSE}
 trnmat<-model.matrix(SalePrice ~ ., data = train2)
 tstmat<-model.matrix(SalePrice ~ ., data = test2)
 
@@ -319,7 +321,7 @@ lasso_MSE <- mean((test2$SalePrice - pred.lasso)^2)
 
 |   An AdaBoost Boosting model was also fit as it was thought that a Boosting model may increase predictive accuracy of housing prices via its ability add strength or weight to specific classifiers after taking into account the previous classifier’s success. It was thought that a Boosting model would help reduce dimensionality by resulting in significant classifiers being assigned higher weights than less significant classifiers. The test MSE of the AdaBoost Boosting model was later compared with the test MSE of the other chosen models in order to choose the most accurate model for predicting Sale Price. \ 
 
-```{r boost, warning=FALSE, cache=TRUE}
+```{r boost, warning=FALSE, cache=TRUE, echo=FALSE}
 lambs <- seq(0.001, 0.05, length.out = 50)
 length_lamb <- length(lambs)
 tr_err <- rep(NA, length_lamb)
@@ -349,7 +351,7 @@ boost_MSE
 
 |   In order to compare the test MSE values of the chosen models, a table was created. The table shows that the MSE for the Bagging and Random Forest models to be the smallest with Bagging having a slightly smaller MSE. However, the Random Forest model was still selected as it has better interpretability when compared to Bagging. And the difference in MSE is not drastic. 
 
-```{r}
+```{r, echo=FALSE}
 MSE_table <- data.frame(Model = c("Decision Tree", "Random Forest", "Bagged Forest", "Boosted Forest", "LASSO"), 
                         MSE = c(dt_MSE, rf_MSE, bag_MSE, boost_MSE, lasso_MSE))
 
@@ -424,7 +426,7 @@ for(col in colnames(test1)) {
 
 ```
 
-```{r newlevels}
+```{r newlevels, echo=FALSE}
 #Remove rows that contain levels in test that are not in train
 #cant perform any prediction if this is the case
 
@@ -456,9 +458,9 @@ for(col in colnames(test3)) {
 
 ```
 
-|   Once the test data was properly configured, the Random Forest model was fit using the entire training set and the predcition of SalePrice using the configured test data was made.
+|   Once the test data was properly configured, the Random Forest model was fit using the entire training set and the prediction of SalePrice using the configured test data was made.
 
-```{r predRF, cache=TRUE}
+```{r predRF, cache=TRUE, echo=FALSE}
 #fit rf (chosen model of the ones used)
 rf2 <- randomForest(SalePrice ~., train1, mtry=floor(sqrt(ncol(train1)-1)), importance=TRUE)
 
@@ -478,7 +480,7 @@ mean_price <- mean(pred2$SalePrice)
 
 ```
 
-```{r sub}
+```{r sub, echo=FALSE}
 #add row for the MSSubClass row that was removed
 r <- row_Sub_150
 newrow <- cbind(id_Sub_150, mean_price)
@@ -494,10 +496,10 @@ pred3 <- insertRow(pred2, newrow, r)
 ```
 
 # Results
-|   The predicted Sale Price was submitted to Kaggle and a score of 0.14931 was given. According to the Kaggle competition, this score is calculated by taking the root mean squared error between the logarithm of the predicted value and the logarithm of the observed sales price. 
+|   The predicted Sale Price was submitted to Kaggle and a score of 0.14931 was given. According to the Kaggle competition, this score is calculated by taking the root mean squared error between the logarithm of the predicted value and the logarithm of the observed sales price. This places us at 3074 out of 5396 submissions. However, most of the top 1000 submissions had RMSE scores of about 0.12, which isn't that far off from our score. Overall, we were able to create a fairly accurate model  
 
 # Outside Exploration
-|   An original hope for the project was to see if this model and data could be applied outside of the original population. We worked with the co-owner of Deluxe Homes LLC, Stu Sprecher who is a licensed contractor to explore what we had been finding and get some industry insights. The first problem that was discovered was that all of the models were showing that predictors such as Neighborhood and OverallQuality were very significant in predicting sale price. This was an issue as for starters, the neighborhoods of Ames, Iowa cannot be easily compared to a neighborhoods in Berthoud, Colorado. Additionally, these quality ratings are very subjective, what Stu may rate an 8, Dean De Cock who compiled this data, might rate as a 6 for example. Stu also pointed out that this model and data fail to consider certain aspects involved in building a home that can impact sale price. An example he kept returning to was the soil quality. Where he has started to build in Serverance, Colorado has much poorer soil quality then where he was building in Berthoud, Colorado. As such, it costs a lot for to reinforce the foundation to account for that poor soil quality and as such the price of the home will increase. Additionally, prices of building materials has shifted recently, making production of a home more costly which also impacts that sale price. 
+|   An original hope for the project was to see if this model and data could be applied outside of the original population. We worked with the co-owner of Deluxe Homes LLC, Stu Sprecher who is a licensed contractor to explore what we had been finding and get some industry insights. The first problem that was discovered was that all of the models were showing that predictors such as Neighborhood and OverallQuality were very significant in predicting sale price. This was an issue as for starters, the neighborhoods of Ames, Iowa cannot be easily compared to a neighborhoods in Berthoud, Colorado. Additionally, these quality ratings are very subjective, what Stu may rate an 8, Dean De Cock who compiled this data, might rate as a 6 for example. Stu also pointed out that this model and data fail to consider certain aspects involved in building a home that can impact sale price. An example he kept returning to was the soil quality. Where he has started to build in Severance, Colorado has much poorer soil quality then where he was building in Berthoud, Colorado. As such, it costs a lot for to reinforce the foundation to account for that poor soil quality and as such the price of the home will increase. Additionally, prices of building materials has shifted recently, making production of a home more costly which also impacts that sale price. 
 |   Once it was concluded that fitting the model using data provided from Stu in the Berthoud, Colorado area would not be ideal, we considered finding similar data in Ames but more recent. Through further considerations that would also prove problematic as the housing market has shifted in the last decade and it is hard to determine if the significance of a predictor such as Neighborhood has also shifted. Ultimately, it appears that the Ames, Iowa housing data appears to simply be a snap shot in time. It can help predict sale prices for that area in that given time frame but with so many influences outside of the data it is hard to use this data, and the models that are fit with the data, to predict housing prices for other locations or even dates.
 
 # References

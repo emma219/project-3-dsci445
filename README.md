@@ -5,7 +5,11 @@ Team Members: Megan Dunnahoo, Mandey Brown, Emma Hamilton
 
 Group3_Project.Rmd is our RMarkdown file with all of our code
 
+Group3_Project.pdf is our final paper pdf
+
 Slides.Rmd is our RMarkdown file for our presentation
+
+Slides.pdf is our final slides presentation pdf
 
 In Group3_Project.Rmd the first chunk contains all libraries needed for the code to execute. set.seed(445) was then used for reproducibility
 
